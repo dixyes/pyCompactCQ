@@ -58,16 +58,17 @@ CQEVENT(int32_t, __eventExit, 0)() {
 CQEVENT(int32_t, __eventEnable, 0)() {
     // allco pyName buffer first
     wchar_t * pyName = malloc(MAX_PATH+1 * sizeof(wchar_t));
-    for (int pyVer = MIN_PY_VER; pyVer <= MAX_PY_VER; pyVer++) {
+    for (pyVer = MIN_PY_VER; pyVer <= MAX_PY_VER; pyVer++) {
 #ifdef _DEBUG
 #   ifdef USE_PYD
         wsprintfW(pyName, USE_PYD L"\\"  L"python%d_d.dll", pyVer);
 #   else
         wsprintfW(pyName, L"python%d_d.dll", pyVer);
-#   endif 
+#   endif
 #else
         wsprintfW(pyName, L"python%d.dll", pyVer);
 #endif
+
         logd("pyLoad", "loading %ls", pyName);
         pyStatus = py_load(pyName);
         if (0 == pyStatus) {

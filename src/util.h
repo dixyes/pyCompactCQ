@@ -32,6 +32,7 @@ typedef enum {
 } LOGGER_TYPE;
 
 extern int ac; // CQAPI AC
+extern int pyVer;
 
 extern void util_init();
 extern void util_free();

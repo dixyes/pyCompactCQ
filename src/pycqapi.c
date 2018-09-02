@@ -115,12 +115,12 @@ PyMODINIT_FUNC PyInit_cqapi(void) {
     PyModule_AddIntConstant(module, "REQUEST_GROUPADD", REQUEST_GROUPADD);// 请求_群添加
     PyModule_AddIntConstant(module, "REQUEST_GROUPINVITE", REQUEST_GROUPINVITE);// 请求_群邀请
     PyModule_AddIntConstant(module, "CQLOG_DEBUG", CQLOG_DEBUG);// 调试 灰色
-    PyModule_AddIntConstant(module, "CQLOG_INFO", CQLOG_INFO);// 信息 黑色
-    PyModule_AddIntConstant(module, "CQLOG_INFOSUCCESS", CQLOG_INFOSUCCESS);// 信息(成功) 紫色
-    PyModule_AddIntConstant(module, "CQLOG_INFORECV", CQLOG_INFORECV);// 信息(接收) 蓝色
-    PyModule_AddIntConstant(module, "CQLOG_INFOSEND", CQLOG_INFOSEND);// 信息(发送) 绿色
-    PyModule_AddIntConstant(module, "CQLOG_WARNING", CQLOG_WARNING);// 警告 橙色
-    PyModule_AddIntConstant(module, "CQLOG_ERROR", CQLOG_ERROR);// 错误 红色
+    PyModule_AddIntConstant(module, "LOGGER_INFO", LOGGER_INFO);// 信息 黑色
+    PyModule_AddIntConstant(module, "LOGGER_INFOSUCCESS", LOGGER_INFOSUCCESS);// 信息(成功) 紫色
+    PyModule_AddIntConstant(module, "LOGGER_INFORECV", LOGGER_INFORECV);// 信息(接收) 蓝色
+    PyModule_AddIntConstant(module, "LOGGER_INFOSEND", LOGGER_INFOSEND);// 信息(发送) 绿色
+    PyModule_AddIntConstant(module, "LOGGER_WARNING", LOGGER_WARNING);// 警告 橙色
+    PyModule_AddIntConstant(module, "LOGGER_ERROR", LOGGER_ERROR);// 错误 红色
     PyModule_AddIntConstant(module, "CQLOG_FATAL", CQLOG_FATAL);// 致命错误 深红
     PyGILState_Release(gstate);
     return module;
@@ -129,7 +129,7 @@ PyMODINIT_FUNC PyInit_cqapi(void) {
 // 以下是CQAPIs的封装实现
 /*
 * 使用CQ_AddLog记录obj.__repr__()到日志
-* 对应py的api cqapi.logger(obj,type=cqapi.CQLOG_INFO,type=cqapi.CQLOG_INFO,)
+* 对应py的api cqapi.logger(obj,type=cqapi.LOGGER_INFO,type=cqapi.LOGGER_INFO,)
 * 参数 obj:要记录的对象，随便啥对象，要有__repr__方法
 * 可选参数 type:记录日志的类型（参考cqp.h，使用cqapi.CQLOG_xxx引用）
 * 可选参数 tag:记录日志的tag
@@ -145,7 +145,7 @@ static PyObject * cqLogger(PyObject *self, PyObject *args, PyObject *kw)
 
     PyObject* obj = NULL;
     const char* tag = "pyLogger";
-    int type = CQLOG_INFO;
+    int type = LOGGER_INFO;
     static char *kwlist[] = { "obj", "tag", "type", NULL };
     if (!PyArg_ParseTupleAndKeywords(args, kw, "O|sI", kwlist, &obj, &tag, &type)) {
         PyGILState_Release(gstate);

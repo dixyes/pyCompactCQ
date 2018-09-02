@@ -31,7 +31,7 @@ def mian():
         reEndmakr = re.compile(ENDMAKR)
         reMark = re.compile(MARK)
         reEndmark = re.compile(ENDMARK)
-        with open(sys.argv[2],"r") as pys:
+        with open(sys.argv[2],"r", encoding="utf-8-sig") as pys:
             pysText = pys.readlines()
             pysStart = pysText.index([x for x in pysText if reMakr.match(x)][0])
             pysEnd = pysText.index([x for x in pysText if reEndmakr.match(x)][0])
@@ -39,7 +39,7 @@ def mian():
             idsList = sorted([TMPL.format(extractIdentifier(x)) for x in insList])
             #print(insList,idsList)
             #exit(0)
-            with open(sys.argv[1]) as pyc:
+            with open(sys.argv[1], encoding="utf-8-sig") as pyc:
                 pycText = pyc.readlines()
                 pycStart = pycText.index([x for x in pycText if reMark.match(x)][0])
                 pycEnd = pycText.index([x for x in pycText if reEndmark.match(x)][0])

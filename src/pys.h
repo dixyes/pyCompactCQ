@@ -302,13 +302,11 @@ PyObject *(*PyImport_ImportModule) (const char * name);
 PyObject *(*PyImport_AddModule) (const char * name);
 PyObject *(*PyObject_GetAttrString) (PyObject * obj, const char * str);
 int (*PyList_Append)(PyObject *list, PyObject *item);
-PyObject *(*PyUnicode_FromString) (const char *u);
 PyObject* (*PyModule_GetDict) (PyObject *module);
 PyObject* (*PyRun_FileEx) (FILE *fp, const char *filename, int start, PyObject *globals, PyObject *locals, int closeit);
 void (*PyErr_Fetch)(PyObject **ptype, PyObject **pvalue, PyObject **ptraceback);
 PyObject* (*PyObject_Repr)(PyObject *o);
 PyObject * (*PyEval_CallMethod)(PyObject *obj, const char *name, const char *format, ...);
-const char* (*PyUnicode_AsUTF8) (PyObject *unicode);
 PyObject* (*PyDict_GetItemString)(PyObject *p, const char *key);
 int (*PyArg_ParseTuple)(PyObject *args, const char *format, ...);
 int(*PyArg_VaParseTupleAndKeywords)(PyObject *args, PyObject *kw, const char *format, char *keywords[], va_list vargs);
@@ -319,8 +317,6 @@ int (*PyErr_BadArgument)(void);
 int(*PyModule_AddStringConstant)(PyObject *module, const char *name, const char *value);
 PyObject* (*PyLong_FromLong)(long v);
 PyObject* (*PyLong_FromLongLong)(long long v);
-PyTypeObject * PyUnicode_Type;
-PyObject* (*PyUnicode_AsEncodedString)(PyObject *unicode, const char *encoding, const char *errors);
 char* (*PyBytes_AsString)(PyObject *o);
 PyObject* (*Py_VaBuildValue)(const char *format, va_list vargs);
 int (*PyCallable_Check)(PyObject *o);
@@ -328,16 +324,29 @@ PyObject* (*PyObject_Call)(PyObject *callable, PyObject *args, PyObject *kwargs)
 PyObject* (*PyDict_New)();
 int (*PyArg_Parse)(PyObject *args, char *format, ...);
 void (*PyEval_InitThreads)(void);
-int (*PyGILState_Check)(void);
 PyGILState_STATE(*PyGILState_Ensure)(void);
 void(*PyGILState_Release)(PyGILState_STATE);
 void (*PyEval_ReleaseThread)(PyThreadState *tstate);
 PyThreadState *(*PyThreadState_Get)(void);
 PyObject* (*Py_BuildValue)(const char *format, ...);
+PyObject* (*PyTuple_New)(Py_ssize_t len);
+int (*PyTuple_SetItem)(PyObject *p, Py_ssize_t pos, PyObject *o);
 /*ENDMAKR*/
-//#define PyGILState_Ensure() PyGILState_UNLOCKED
-//#define PyGILState_Release(x)
-PyObject * (*PyModule_Create2)(struct PyModuleDef*,int apiver);
+// py below 3.4 dont support
+
+int(*PyGILState_Check)(void);
+
+// py below 3.3 dont support
+
+const char* (*PyUnicode_AsUTF8) (PyObject *unicode);
+
+// py 3.1, 3.2 have no froward 
+
+PyTypeObject * PyUnicode_Type;
+PyObject *(*PyUnicode_FromString) (const char *u);
+PyObject* (*PyUnicode_AsEncodedString)(PyObject *unicode, const char *encoding, const char *errors);
+// no forward for this
+PyObject * (*PyModule_Create2)(struct PyModuleDef*, int apiver);
 #define PyModule_Create(x) PyModule_Create2(x, 1013) // this api version not same as python, see pydir/include/modsupport.hL132
 
 #endif // _PY_STRUCT_HEADER

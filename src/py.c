@@ -1,4 +1,4 @@
-/*
+ï»¿/*
 * pyc Python Compact Library - python dynamic(dirty) load
 * copyright 2017-2018 dixyes
 * MIT License
@@ -31,13 +31,36 @@ bool py_intLoaded = false;
         return ERR_FUNCTION_INIT_FAIL;\
     };\
 }
+
 /*
-* ×°ÔØpython3x.dll
-* @param dllName ÒªÊ¹ÓÃµÄdllÃû³Æ£¬NULLÊ±Ê¹ÓÃÄ¬ÈÏµÄpython37_d.dllºÍpython73.dll
-* @return ·µ»Ø×°ÔØ½á¹ûÃ¶¾ÙÖµ
-*         ERR_EP_CANT_OPEN ´ò²»¿ªÈë¿ÚµãÎÄ¼þ£¬¼ì²éÈë¿ÚµãÎÄ¼þÊÇ·ñÎ»ÓÚappdirectionary
-*         ERR_MODULE_NOT_LOAD dllÎ´×°ÔØ
-*         S_OK ³É¹¦×°ÔØ
+* dirty patch for py3.0,3.2,3.2
+*/
+const char* dirtyPyUnicode_AsUTF8(PyObject *unicode) {
+    PyObject * pyoRet;
+    int retCode = -1;
+    char * ret;
+    pyoRet = PyTuple_New(1);
+    if (NULL == pyoRet) {
+        return NULL;
+    }
+    retCode = PyTuple_SetItem(pyoRet, 0, unicode);
+    if (0 != retCode) {
+        return NULL;
+    }
+    retCode = PyArg_ParseTuple(pyoRet, "es", "gb18030", &ret);
+    if (0 == retCode) {
+        return NULL;
+    }
+    return (const char *)ret;
+}
+
+/*
+* è£…è½½python3x.dll
+* @param dllName è¦ä½¿ç”¨çš„dllåç§°ï¼ŒNULLæ—¶ä½¿ç”¨é»˜è®¤çš„python37_d.dllå’Œpython73.dll
+* @return è¿”å›žè£…è½½ç»“æžœæžšä¸¾å€¼
+*         ERR_EP_CANT_OPEN æ‰“ä¸å¼€å…¥å£ç‚¹æ–‡ä»¶ï¼Œæ£€æŸ¥å…¥å£ç‚¹æ–‡ä»¶æ˜¯å¦ä½äºŽappdirectionary
+*         ERR_MODULE_NOT_LOAD dllæœªè£…è½½
+*         S_OK æˆåŠŸè£…è½½
 */
 int py_load(wchar_t * dllName){
     if (NULL == dllName) {
@@ -83,8 +106,6 @@ int py_load(wchar_t * dllName){
     _checkPyFunction(PyEval_InitThreads);
     PyEval_ReleaseThread = (void (__cdecl *)(PyThreadState *tstate))GetProcAddress(py_module, "PyEval_ReleaseThread");
     _checkPyFunction(PyEval_ReleaseThread);
-    PyGILState_Check = (int (__cdecl *)(void))GetProcAddress(py_module, "PyGILState_Check");
-    _checkPyFunction(PyGILState_Check);
     PyGILState_Ensure = (PyGILState_STATE(__cdecl *)(void))GetProcAddress(py_module, "PyGILState_Ensure");
     _checkPyFunction(PyGILState_Ensure);
     PyGILState_Release = (void(__cdecl *)(PyGILState_STATE))GetProcAddress(py_module, "PyGILState_Release");
@@ -117,14 +138,10 @@ int py_load(wchar_t * dllName){
     _checkPyFunction(PyRun_FileEx);
     PyThreadState_Get = (PyThreadState *(__cdecl *)(void))GetProcAddress(py_module, "PyThreadState_Get");
     _checkPyFunction(PyThreadState_Get);
-    PyUnicode_AsEncodedString = (PyObject* (__cdecl *)(PyObject *unicode, const char *encoding, const char *errors))GetProcAddress(py_module, "PyUnicode_AsEncodedString");
-    _checkPyFunction(PyUnicode_AsEncodedString);
-    PyUnicode_AsUTF8 = (const char* (__cdecl *) (PyObject *unicode))GetProcAddress(py_module, "PyUnicode_AsUTF8");
-    _checkPyFunction(PyUnicode_AsUTF8);
-    PyUnicode_FromString = (PyObject *(__cdecl *) (const char *u))GetProcAddress(py_module, "PyUnicode_FromString");
-    _checkPyFunction(PyUnicode_FromString);
-    PyUnicode_Type = (PyTypeObject *)GetProcAddress(py_module, "PyUnicode_Type");
-    _checkPyFunction(PyUnicode_Type);
+    PyTuple_New = (PyObject* (__cdecl *)(Py_ssize_t len))GetProcAddress(py_module, "PyTuple_New");
+    _checkPyFunction(PyTuple_New);
+    PyTuple_SetItem = (int (__cdecl *)(PyObject *p, Py_ssize_t pos, PyObject *o))GetProcAddress(py_module, "PyTuple_SetItem");
+    _checkPyFunction(PyTuple_SetItem);
     Py_BuildValue = (PyObject* (__cdecl *)(const char *format, ...))GetProcAddress(py_module, "Py_BuildValue");
     _checkPyFunction(Py_BuildValue);
     Py_Finalize = (void (__cdecl *) (void))GetProcAddress(py_module, "Py_Finalize");
@@ -139,26 +156,57 @@ int py_load(wchar_t * dllName){
     _checkPyFunction(_Py_NoneStruct);
     /*ENDAUTOLISTMARK*/
     // spectial for different export name in .dll and _d.dll
+    // for py below 3.4
+    switch(pyVer) {
+    case 37:
+    case 36:
+    case 35:
+    case 34:
+        PyGILState_Check = (int(__cdecl *)(void))GetProcAddress(py_module, "PyGILState_Check");
+    case 33:
+    case 32:
+        PyUnicode_AsEncodedString = (PyObject * (__cdecl*)(PyObject *unicode, const char *encoding, const char *errors))GetProcAddress(py_module, "PyUnicode_AsEncodedString");
+        _checkPyFunction(PyUnicode_AsEncodedString);
+        PyUnicode_FromString = (PyObject *(__cdecl *) (const char *u))GetProcAddress(py_module, "PyUnicode_FromString");
+        _checkPyFunction(PyUnicode_FromString);
+        
+    case 31:
+    case 30:
+        PyUnicode_Type = (PyTypeObject *)GetProcAddress(py_module, "PyUnicode_Type");
+        if (NULL == PyUnicode_Type) {
+            PyUnicode_Type = (PyTypeObject *)GetProcAddress(py_module, "_PyUnicode_Type");
+            _checkPyFunction(PyUnicode_Type);
+        }
+        PyUnicode_AsUTF8 = dirtyPyUnicode_AsUTF8;
+        PyUnicode_AsEncodedString = (PyObject * (__cdecl*)(PyObject *unicode, const char *encoding, const char *errors))GetProcAddress(py_module, "PyUnicodeUCS2_AsEncodedString");
+        if (NULL == PyUnicode_AsEncodedString) {
+            PyUnicode_AsEncodedString = (PyObject * (__cdecl*)(PyObject *unicode, const char *encoding, const char *errors))GetProcAddress(py_module, "PyUnicodeUCS4_AsEncodedString");
+            _checkPyFunction(PyUnicode_AsEncodedString);
+        }
+        PyUnicode_FromString = (PyObject *(__cdecl *) (const char *u))GetProcAddress(py_module, "PyUnicodeUCS2_FromString");
+        if (NULL == PyUnicode_FromString) {
+            PyUnicode_FromString = (PyObject * (__cdecl*) (const char *u))GetProcAddress(py_module, "PyUnicodeUCS4_FromString");
+            _checkPyFunction(PyUnicode_FromString);
+        }
+    }
+    
     PyModule_Create2 = (PyObject * (__cdecl*)(struct PyModuleDef*, int))GetProcAddress(py_module, "PyModule_Create2");
     if (NULL == PyModule_Create2) {
         PyModule_Create2 = (PyObject * (__cdecl*)(struct PyModuleDef*, int))GetProcAddress(py_module, "PyModule_Create2TraceRefs");
-        if (NULL == PyModule_Create2) {
-            loge("loadFunction", "PyModule_Create failed");
-            return ERR_FUNCTION_INIT_FAIL;
-        }
+        _checkPyFunction(PyModule_Create2);
     }
     py_moduleLoaded = true;
     
     return 0;
 }
 /*
-* Ð¶ÔØpython3x.dll
-*  Õâ¸öº¯Êý¿ÉÄÜ²¢²»ÄÜÍêÈ«µÄÇå¸É¾»ÄÚ´æ£¬Èç¹û·¢ÏÖÐ¹Â¶Çë¼°Ê±±¨¸æ
-* @return ·µ»ØÐ¶ÔØ½á¹û(Õæ³É¹¦ ¼ÙÊ§°Ü)
+* å¸è½½python3x.dll
+*  è¿™ä¸ªå‡½æ•°å¯èƒ½å¹¶ä¸èƒ½å®Œå…¨çš„æ¸…å¹²å‡€å†…å­˜ï¼Œå¦‚æžœå‘çŽ°æ³„éœ²è¯·åŠæ—¶æŠ¥å‘Š
+* @return è¿”å›žå¸è½½ç»“æžœ(çœŸæˆåŠŸ å‡å¤±è´¥)
 */
 bool py_unload() {
     if (!py_moduleLoaded) {
-        logx("unloadModule", CQLOG_WARNING, "calling py_unload with module not load!");
+        logx("unloadModule", LOGGER_WARNING, "calling py_unload with module not load!");
         return false;
     };
     BOOL unloaded = FreeLibrary(py_module);
@@ -168,7 +216,7 @@ bool py_unload() {
     return unloaded;
 }
 
-PyMODINIT_FUNC PyInit_cqapi(void); // ÉùÃ÷º¯Êý£¬ÓÃÓÚPyImport_AppendInittab
+PyMODINIT_FUNC PyInit_cqapi(void); // å£°æ˜Žå‡½æ•°ï¼Œç”¨äºŽPyImport_AppendInittab
 
 
 #define _checkPyObj(name) {\
@@ -182,11 +230,11 @@ PyMODINIT_FUNC PyInit_cqapi(void); // ÉùÃ÷º¯Êý£¬ÓÃÓÚPyImport_AppendInittab
 PyObject *pyoGlobal = NULL;
 PyObject *pyoGlobalDict = NULL;
 /*
-* ³õÊ¼»¯pythonÐéÄâ»ú/½âÊÍÆ÷/Ëæ±ãÄã½ÐËüÉ¶,¼ÓÔØÈë¿Úµã
-* @return ·µ»Ø³õÊ¼»¯½á¹ûÃ¶¾Ù£º
-*         ERR_PYAPI_FAIL Python APIÊ§°Ü
-*         ERR_EP_CANT_OPEN epÎÄ¼þ´ò²»¿ª
-*         ERR_EP_FAIL epÖ´ÐÐÊ§°Ü
+* åˆå§‹åŒ–pythonè™šæ‹Ÿæœº/è§£é‡Šå™¨/éšä¾¿ä½ å«å®ƒå•¥,åŠ è½½å…¥å£ç‚¹
+* @return è¿”å›žåˆå§‹åŒ–ç»“æžœæžšä¸¾ï¼š
+*         ERR_PYAPI_FAIL Python APIå¤±è´¥
+*         ERR_EP_CANT_OPEN epæ–‡ä»¶æ‰“ä¸å¼€
+*         ERR_EP_FAIL epæ‰§è¡Œå¤±è´¥
 */
 int py_init(){
     int retCode = 0; // py api return code
@@ -265,7 +313,7 @@ int py_init(){
 
     py_botObj = PyDict_GetItemString(pyoGlobalDict, "__bot__");
     if (NULL == py_botObj) {
-        logx("runEntryPoint", CQLOG_WARNING, TEXT_NOBOTGLOBALVAR);
+        logx("runEntryPoint", LOGGER_WARNING, TEXT_NOBOTGLOBALVAR);
         return 0;
     }
     py_entrypointLoaded = true;
@@ -276,8 +324,8 @@ int py_init(){
 }
 
 /*
-*  Ð¶ÔØÈë¿Úµã£¬½áÊøpython½âÊÍÆ÷
-*    Õâ¸öº¯Êý¿ÉÄÜ²¢²»ÄÜÍêÈ«µÄÇå¸É¾»ÄÚ´æ£¬Èç¹û·¢ÏÖÐ¹Â¶Çë¼°Ê±±¨¸æ
+*  å¸è½½å…¥å£ç‚¹ï¼Œç»“æŸpythonè§£é‡Šå™¨
+*    è¿™ä¸ªå‡½æ•°å¯èƒ½å¹¶ä¸èƒ½å®Œå…¨çš„æ¸…å¹²å‡€å†…å­˜ï¼Œå¦‚æžœå‘çŽ°æ³„éœ²è¯·åŠæ—¶æŠ¥å‘Š
 */
 void py_end() {
     if (py_intLoaded) {
@@ -289,23 +337,23 @@ void py_end() {
 }
 
 time_t lastWarned = 0;
-int warnLevel = CQLOG_WARNING;
+int warnLevel = LOGGER_WARNING;
 #define WARNCOOLDOWN  (time_t)3
 /*
-* µ÷ÓÃ__bot__µÄÊÂ¼þ»Øµ÷
-*   PYCQAPI_VERSION µ±Ç°ÐÐÎª
-*             0.0.1 ½«»á»ñÈ¡__bot__µÄemit·½·¨£¬²¢½«ÓÉformatÍ¨¹ýPy_VaBuildValue»ñÈ¡¿É±ä²ÎÉú³ÉeventTuple£¬µ÷ÓÃemit(__bot__,eventName,eventTuple)
-* @param cbName ÊÂ¼þÃû³Æ
-* @param format ÊÂ¼þÃû³Æ
-* @param ... ÊÂ¼þÃû³Æ
-* @return ·µ»Øenum{EVENT_BLOCK;EVENT_IGNORE};
-* @note µ±·¢Éú´íÎóÊ±Õâ¸öº¯Êý²»abort/Å×³öÒì³££¬½ö×öÈÕÖ¾²¢·µ»ØEVENT_IGNORE
+* è°ƒç”¨__bot__çš„äº‹ä»¶å›žè°ƒ
+*   PYCQAPI_VERSION å½“å‰è¡Œä¸º
+*             0.0.1 å°†ä¼šèŽ·å–__bot__çš„emitæ–¹æ³•ï¼Œå¹¶å°†ç”±formaté€šè¿‡Py_VaBuildValueèŽ·å–å¯å˜å‚ç”ŸæˆeventTupleï¼Œè°ƒç”¨emit(__bot__,eventName,eventTuple)
+* @param cbName äº‹ä»¶åç§°
+* @param format äº‹ä»¶åç§°
+* @param ... äº‹ä»¶åç§°
+* @return è¿”å›ženum{EVENT_BLOCK;EVENT_IGNORE};
+* @note å½“å‘ç”Ÿé”™è¯¯æ—¶è¿™ä¸ªå‡½æ•°ä¸abort/æŠ›å‡ºå¼‚å¸¸ï¼Œä»…åšæ—¥å¿—å¹¶è¿”å›žEVENT_IGNORE
 */
 int py_callCallback(const char *eventName, const char * format, ...) {
     // warn not initedthings and warn rate limit
     if (!(py_moduleLoaded && py_intLoaded && py_entrypointLoaded)) {
         if (time(NULL) - lastWarned > WARNCOOLDOWN) {
-            warnLevel = CQLOG_WARNING;
+            warnLevel = LOGGER_WARNING;
         }
         else {
             warnLevel = CQLOG_DEBUG;
