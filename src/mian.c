@@ -53,7 +53,9 @@ CQEVENT(int32_t, __eventExit, 0)() {
 * this plugin enabled
 */
 CQEVENT(int32_t, __eventEnable, 0)() {
-    pyStatus = py_load(L"C:\\Users\\DIXXPS\\Desktop\\pycompact\\Python-3.7.0\\PCbuild\\win32\\python37_d.dll");
+#ifdef USE_PYD
+    pyStatus = py_load(USE_PYD L"\\python37_d.dll");
+#endif
     logd("py_load","ret = %d", pyStatus);
     if(0==pyStatus){
         int ret = py_init(ac);
