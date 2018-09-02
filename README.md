@@ -13,7 +13,9 @@
 
 ### py开发者
 
-编写你的入口点文件__entrypoint__.py：
+编写你的入口点文件__entrypoint__.py
+
+可以参考pyfiles文件夹中的范例机器人和helper，helper会随C程序更新
 
 你需要实现
 
@@ -33,6 +35,12 @@ class Bot():
 待补全
 
 ## 构建
+
+首先获取源码：
+    
+    git clone <本仓库地址> 
+    git submodule update proplib/cqsdk-vc # 更新sdk依赖
+
 ### Clang/gcc直接编译 不使用ide/gnumake之类的
 
 1. 安装clang/gcc(gcc 在win怎么安来着), 将build.bat里面`set CC=clang`改成你的编译器名称
@@ -41,7 +49,15 @@ class Bot():
 
 ### visual studio
 
-(vs分支,待完成)
+打开pyCompactCQ.sln，然后构建（或者msbuild一样的
+
+如果要调试：在左侧“属性管理器”双击Microsoft.Cpp.Win32.user,在左侧选择“用户宏”,在右侧添加以下变量(参考pyCompactCQ.vcxproj.user.example)
+
+宏名称 | 值 | 说明 |
+------ | -- | ---- |
+CQPDir | CPQ.exe所在目录 | 以“\”结尾， 可以使用内置宏 如`$(ProjectDir)..\CQP\`
+DebugablePythonDir | 可以调试的python3x.d所在目录 | 以“\”结尾， 可以使用内置宏 如`$(ProjectDir)..\Python-3.7.0\PCbuild\win32\`
+USE_PYD | /DUSE_PYD=$(DebugablePythonDir) | 如说明填写
 
 ## 问题
 ### 已知问题
