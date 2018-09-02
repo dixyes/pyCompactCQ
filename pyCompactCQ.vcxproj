@@ -89,6 +89,9 @@ python $(SolutionDir)fuckgb.py $(SolutionDir)src/texts.h
     <PreBuildEvent>
       <Message>autolist and fuckGB</Message>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy /Y $(TargetPath) $(CQPDir)app\</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
