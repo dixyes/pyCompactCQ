@@ -29,6 +29,7 @@
 // structs
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 typedef int32_t Py_ssize_t;
 typedef Py_ssize_t Py_hash_t;
 

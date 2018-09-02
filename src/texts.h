@@ -1,4 +1,4 @@
-/*
+﻿/*
 * pyc - texts.h - FUCK GB!
 * copyright 2017-2018 dixyes
 * MIT License

@@ -36,8 +36,7 @@ CQEVENT(int32_t, Initialize, 4)(int32_t AuthCode) {
 */
 CQEVENT(int32_t, __eventStartup, 0)() {
     // not logable, do some really quiet things
-    util_alloc_logx_buf(ac);
-    util_alloc_le_buf();
+    util_init();
     //pyStatus = py_load();
 	return 0;
 }
@@ -46,8 +45,7 @@ CQEVENT(int32_t, __eventStartup, 0)() {
 * when stop cq
 */
 CQEVENT(int32_t, __eventExit, 0)() {
-    util_free_logx_buf();
-    util_free_le_buf();
+    util_free();
 	return 0;
 }
 

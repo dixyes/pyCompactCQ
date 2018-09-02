@@ -28,7 +28,7 @@ if "__main__" == __name__:
         cmtlRegex = re.compile(COMMENTL_REGEX)
         mkrRegex = re.compile(MKR_REGEX)
         endmkrRegex = re.compile(ENDMKR_REGEX)
-        with open(sys.argv[1], encoding="utf8") as fgbh:
+        with open(sys.argv[1], encoding="utf-8-sig") as fgbh:
             fl = fgbh.readlines()
             for line in fl:
                 match = cmtRegex.match(line)
@@ -57,7 +57,7 @@ if "__main__" == __name__:
             if newFile.replace("\r\n","\n") == "".join(fl).replace("\r\n","\n"):
                 print("fuckGB.py: not changing")
                 exit()
-        with open(sys.argv[1], "w", encoding="utf8") as fgbh:
+        with open(sys.argv[1], "w", encoding="utf-8-sig") as fgbh:
             fgbh.write(newFile)
     except Exception as e:
         print("fucked up, restore backup")

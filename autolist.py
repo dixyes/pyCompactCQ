@@ -51,7 +51,7 @@ def mian():
                 if "".join(pycNew).replace("\r\n","\n") == pyc.read().replace("\r\n","\n"):
                     print("autolist.py: not changing")
                     exit(0)
-            with open(sys.argv[1],"w") as pyc:
+            with open(sys.argv[1],"w", encoding="utf-8-sig") as pyc:
                 pyc.write("".join(pycNew))
     except Exception as e:
         print("fucked up, restore backup")
