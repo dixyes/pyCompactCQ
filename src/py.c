@@ -173,21 +173,22 @@ int py_load(wchar_t * dllName){
     case 31:
     case 30:
         PyUnicode_Type = (PyTypeObject *)GetProcAddress(py_module, "PyUnicode_Type");
-        if (NULL == PyUnicode_Type) {
+        if (NULL == PyUnicode_Type)
             PyUnicode_Type = (PyTypeObject *)GetProcAddress(py_module, "_PyUnicode_Type");
-            _checkPyFunction(PyUnicode_Type);
-        }
-        PyUnicode_AsUTF8 = dirtyPyUnicode_AsUTF8;
-        PyUnicode_AsEncodedString = (PyObject * (__cdecl*)(PyObject *unicode, const char *encoding, const char *errors))GetProcAddress(py_module, "PyUnicodeUCS2_AsEncodedString");
-        if (NULL == PyUnicode_AsEncodedString) {
+        _checkPyFunction(PyUnicode_Type);
+        if (NULL == PyUnicode_AsUTF8)
+            PyUnicode_AsUTF8 = dirtyPyUnicode_AsUTF8;
+        if (NULL == PyUnicode_AsEncodedString)
+            PyUnicode_AsEncodedString = (PyObject * (__cdecl*)(PyObject *unicode, const char *encoding, const char *errors))GetProcAddress(py_module, "PyUnicodeUCS2_AsEncodedString");
+        if (NULL == PyUnicode_AsEncodedString) 
             PyUnicode_AsEncodedString = (PyObject * (__cdecl*)(PyObject *unicode, const char *encoding, const char *errors))GetProcAddress(py_module, "PyUnicodeUCS4_AsEncodedString");
-            _checkPyFunction(PyUnicode_AsEncodedString);
-        }
-        PyUnicode_FromString = (PyObject *(__cdecl *) (const char *u))GetProcAddress(py_module, "PyUnicodeUCS2_FromString");
-        if (NULL == PyUnicode_FromString) {
+        _checkPyFunction(PyUnicode_AsEncodedString);
+        if (NULL == PyUnicode_FromString)
+            PyUnicode_FromString = (PyObject *(__cdecl *) (const char *u))GetProcAddress(py_module, "PyUnicodeUCS2_FromString");
+        if (NULL == PyUnicode_FromString)
             PyUnicode_FromString = (PyObject * (__cdecl*) (const char *u))GetProcAddress(py_module, "PyUnicodeUCS4_FromString");
-            _checkPyFunction(PyUnicode_FromString);
-        }
+        _checkPyFunction(PyUnicode_FromString);
+
     }
     
     PyModule_Create2 = (PyObject * (__cdecl*)(struct PyModuleDef*, int))GetProcAddress(py_module, "PyModule_Create2");

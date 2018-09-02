@@ -85,7 +85,7 @@ PyObject* ptype, *pvalue, *ptraceback;
 */
 void _catchPyExc(const char * ln) {
     PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-    char * te = PyUnicode_AsUTF8(PyObject_Repr(ptype));
+    char * te = (char *)PyUnicode_AsUTF8(PyObject_Repr(ptype));
     logx("pyException", LOGGER_ERROR, "%s etype: %s", ln, PyUnicode_AsUTF8(PyObject_Repr(ptype)));
     logx("pyException", LOGGER_ERROR, "%s evalue: %s", ln, PyUnicode_AsUTF8(PyObject_Repr(pvalue)));
     //seems no use...

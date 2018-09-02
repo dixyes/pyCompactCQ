@@ -62,6 +62,29 @@ send like using CoolQ API CQ_sendLike.\
 :return int: unknown from CQ_sendLike\
 :throw TypeError: if argumets have bad type.\
 "
+#define DOC_CQGRPKICK "\
+kick someone using CoolQ API CQ_setGroupKick.\
+\
+:param int grpId: the groupid you want oprate at.\
+:param int QQId: the qqid you want kick.\
+:param bool rejectAddRequest: reject new adding request from this qq.\
+:return int: unknown from CQ_sendLike\
+:throw TypeError: if argumets have bad type.\
+"
+
+#define fuckGBArg(msg) \
+    PyObject * encoded = PyUnicode_AsEncodedString(msg, "gb18030", "strict");\
+    if (NULL == encoded) {\
+        catchPyExc();\
+        PyGILState_Release(gstate);\
+        return NULL;\
+    }\
+    char* pGBText = PyBytes_AsString(encoded);\
+    if (NULL == pGBText) {\
+        catchPyExc();\
+        PyGILState_Release(gstate);\
+        return NULL;\
+    }
 
 static PyObject * cqLogger(PyObject *self, PyObject *args, PyObject *kw);
 static PyObject * cqSendPM(PyObject *self, PyObject *args);
@@ -69,16 +92,18 @@ static PyObject * cqSendGM(PyObject *self, PyObject *args);
 static PyObject * cqSendDM(PyObject *self, PyObject *args);
 static PyObject * cqDeleteMsg(PyObject *self, PyObject *args);
 static PyObject * cqSendLike(PyObject *self, PyObject *args);
+static PyObject * cqGroupKick(PyObject *self, PyObject *args);
 
 // 用于制造cqapi pymodule
 static PyMethodDef cqapiMethodDefs[] = {
     { "logger", (PyCFunction)cqLogger, METH_VARARGS | METH_KEYWORDS, DOC_CQLOGGER },
-{ "sendpm", cqSendPM, METH_VARARGS, DOC_CQSENDPM },
-{ "sendgm", cqSendGM, METH_VARARGS, DOC_CQSENDGM },
-{ "senddm", cqSendDM, METH_VARARGS, DOC_CQSENDDM },
-{ "delmsg", cqDeleteMsg, METH_VARARGS, DOC_CQDELMSG },
-{ "sendlike", cqSendLike, METH_VARARGS, DOC_CQSENDLIKE },
-{ NULL, NULL, 0, NULL }        /* Sentinel */
+    { "sendpm", cqSendPM, METH_VARARGS, DOC_CQSENDPM },
+    { "sendgm", cqSendGM, METH_VARARGS, DOC_CQSENDGM },
+    { "senddm", cqSendDM, METH_VARARGS, DOC_CQSENDDM },
+    { "delmsg", cqDeleteMsg, METH_VARARGS, DOC_CQDELMSG },
+    { "sendlike", cqSendLike, METH_VARARGS, DOC_CQSENDLIKE },
+    { "groukick", cqGroupKick, METH_VARARGS, DOC_CQGRPKICK },
+    { NULL, NULL, 0, NULL }        /* Sentinel */
 };
 static struct PyModuleDef cqapiModuleDef = {
     PyModuleDef_HEAD_INIT,
@@ -157,8 +182,9 @@ static PyObject * cqLogger(PyObject *self, PyObject *args, PyObject *kw)
     //fuckGIL();
     Py_RETURN_NONE;
 }
+
 /*
-* 使用CQ_sendXxxMsg发送私信
+* 使用CQ_sendXxxMsg发送？消息
 * 对应py的api cqapi.sendxm(to,msg) (x=d,p,g)
 * 参数 to:目标qq号/群号/讨论组号
 * 参数 msg:发送的消息
@@ -176,23 +202,13 @@ PyObject * cqSendXM(PyObject *self, PyObject *args, int32_t(__stdcall *cb)(int32
         PyGILState_Release(gstate);
         return NULL;
     }
-    PyObject * encoded = PyUnicode_AsEncodedString(msg, "gb2312", "strict");
-    if (NULL == encoded) {
-        catchPyExc();
-        PyGILState_Release(gstate);
-        return NULL;
-    }
-    char* pGB2312Text = PyBytes_AsString(encoded);
-    if (NULL == pGB2312Text) {
-        catchPyExc();
-        PyGILState_Release(gstate);
-        return NULL;
-    }
+    
+    fuckGBArg(msg);
 #ifdef _DEBUG
-    logd("sendMsg", "sendto: %lld,msg:%s", to, pGB2312Text);
+    logd("sendMsg", "sendto: %lld,msg:%s", to, pGBText);
 #endif
-    int64_t ret = cb(ac, to, pGB2312Text);
-    //free(pGB2312Text);
+    int64_t ret = cb(ac, to, pGBText);
+
     PyGILState_Release(gstate);
     return PyLong_FromLongLong(ret);
 }
@@ -227,6 +243,7 @@ static PyObject * cqDeleteMsg(PyObject *self, PyObject *args)
     PyGILState_Release(gstate);
     return PyLong_FromLong(ret);
 }
+
 /*
 * 使用CQ_sendLike赞
 * 对应py的api cqapi.sendlike(msgId)
@@ -246,6 +263,29 @@ static PyObject * cqSendLike(PyObject *self, PyObject *args)
         return NULL;
     }
     int32_t ret = CQ_sendLike(ac, id);
+    PyGILState_Release(gstate);
+    return PyLong_FromLong(ret);
+}
+
+/*
+* 使用CQ_setGroupKick踢人
+* 对应py的api cqapi.groupkick(groupId, QQID, rejectaddrequest = False)
+*/
+static PyObject * cqGroupKick(PyObject *self, PyObject *args) {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    int64_t groupID;
+    int64_t QQID;
+    int32_t rejectAddRequest = 0;
+
+    if (!PyArg_ParseTuple(args, "LL|p", &groupID, &QQID, &rejectAddRequest)) {
+        catchPyExc();
+        PyGILState_Release(gstate);
+        return NULL;
+    }
+
+    int32_t ret = CQ_setGroupKick(ac, groupID, QQID, rejectAddRequest);
     PyGILState_Release(gstate);
     return PyLong_FromLong(ret);
 }
