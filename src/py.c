@@ -312,13 +312,11 @@ int py_callCallback(const char *eventName, const char * format, ...) {
         }
         lastWarned = time(NULL);
         if (!py_moduleLoaded) {
-            logx("callCallback", warnLevel,"module is not loaded, maybe callback called too early");
-        }
-        if (!py_intLoaded) {
-            logx("callCallback", warnLevel, "py interpreter not intialized, maybe callback called too early");
-        }
-        if (!py_entrypointLoaded) {
-            logx("callCallback", warnLevel, "entryPoint not intialized, maybe callback called too early or ep file corrupt");
+            logx("callCallback", warnLevel, TEXT_MODULENOTLOAD);
+        }else if (!py_intLoaded) {
+            logx("callCallback", warnLevel, TEXT_PYINTNOTLOAD);
+        }else if (!py_entrypointLoaded) {
+            logx("callCallback", warnLevel, TEXT_BOTNOTLOAD);
         }
         return EVENT_IGNORE;
     }

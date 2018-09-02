@@ -10,6 +10,7 @@
 #include "cqp.h"
 
 #include "mian.h"
+#include "texts.h"
 #include "util.h"
 #include "py.h"
 
@@ -49,14 +50,31 @@ CQEVENT(int32_t, __eventExit, 0)() {
 	return 0;
 }
 
+#define MIN_PY_VER 30
+#define MAX_PY_VER 37
 /*
 * this plugin enabled
 */
 CQEVENT(int32_t, __eventEnable, 0)() {
-#ifdef USE_PYD
-    pyStatus = py_load(USE_PYD L"\\python37_d.dll");
+    // allco pyName buffer first
+    wchar_t * pyName = malloc(MAX_PATH+1 * sizeof(wchar_t));
+    for (int pyVer = MIN_PY_VER; pyVer <= MAX_PY_VER; pyVer++) {
+#ifdef _DEBUG
+#   ifdef USE_PYD
+        wsprintfW(pyName, USE_PYD L"\\"  L"python%d_d.dll", pyVer);
+#   else
+        wsprintfW(pyName, L"python%d_d.dll", pyVer);
+#   endif 
+#else
+        wsprintfW(pyName, L"python%d.dll", pyVer);
 #endif
-    logd("py_load","ret = %d", pyStatus);
+        logd("pyLoad", "loading %ls", pyName);
+        pyStatus = py_load(pyName);
+        if (0 == pyStatus) {
+            break;
+        }
+    }
+    
     if(0==pyStatus){
         int ret = py_init(ac);
         logd("py_init","ret = %d", ret);
@@ -66,8 +84,7 @@ CQEVENT(int32_t, __eventEnable, 0)() {
         }
         pluginIsEnabled = true;
     }else{
-         //when py not found, go fuck yourself
-        loge("py_load","cannot load python3x.dll, make sure you have 32bit python3 installed and added to PATH");// todo: 写个多语言支持（或许吧
+        loge("py_load", "%s", TEXT_PYTHONDLLLOADFAIL);// todo: 写个多语言支持（或许吧
     }
     
 	
