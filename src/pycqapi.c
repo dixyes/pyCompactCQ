@@ -68,7 +68,16 @@ kick someone using CoolQ API CQ_setGroupKick.\
 :param int grpId: the groupid you want oprate at.\
 :param int QQId: the qqid you want kick.\
 :param bool rejectAddRequest: reject new adding request from this qq.\
-:return int: unknown from CQ_sendLike\
+:return int: unknown from CQ_setGroupKick\
+:throw TypeError: if argumets have bad type.\
+"
+#define DOC_CQGRPBAN "\
+ban someone using CoolQ API CQ_setGroupBan.\
+\
+:param int grpId: the groupid you want oprate at.\
+:param int QQId: the qqid you want ban.\
+:param int duration: time.\
+:return int: unknown from CQ_setGroupBan\
 :throw TypeError: if argumets have bad type.\
 "
 
@@ -93,6 +102,7 @@ static PyObject * cqSendDM(PyObject *self, PyObject *args);
 static PyObject * cqDeleteMsg(PyObject *self, PyObject *args);
 static PyObject * cqSendLike(PyObject *self, PyObject *args);
 static PyObject * cqGroupKick(PyObject *self, PyObject *args);
+static PyObject * cqGroupBan(PyObject *self, PyObject *args);
 
 // 用于制造cqapi pymodule
 static PyMethodDef cqapiMethodDefs[] = {
@@ -102,7 +112,8 @@ static PyMethodDef cqapiMethodDefs[] = {
     { "senddm", cqSendDM, METH_VARARGS, DOC_CQSENDDM },
     { "delmsg", cqDeleteMsg, METH_VARARGS, DOC_CQDELMSG },
     { "sendlike", cqSendLike, METH_VARARGS, DOC_CQSENDLIKE },
-    { "groukick", cqGroupKick, METH_VARARGS, DOC_CQGRPKICK },
+    { "groupkick", cqGroupKick, METH_VARARGS, DOC_CQGRPKICK },
+    { "groupban", cqGroupBan, METH_VARARGS, DOC_CQGRPBAN },
     { NULL, NULL, 0, NULL }        /* Sentinel */
 };
 static struct PyModuleDef cqapiModuleDef = {
@@ -286,6 +297,29 @@ static PyObject * cqGroupKick(PyObject *self, PyObject *args) {
     }
 
     int32_t ret = CQ_setGroupKick(ac, groupID, QQID, rejectAddRequest);
+    PyGILState_Release(gstate);
+    return PyLong_FromLong(ret);
+}
+
+/*
+* 使用CQ_setGroupBan禁言
+* 对应py的api cqapi.groupban(groupId:int, QQID:int, duration:int)
+*/
+static PyObject * cqGroupBan(PyObject *self, PyObject *args) {
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+
+    int64_t groupID;
+    int64_t QQID;
+    int64_t duration = 0;
+
+    if (!PyArg_ParseTuple(args, "LLL", &groupID, &QQID, &duration)) {
+        catchPyExc();
+        PyGILState_Release(gstate);
+        return NULL;
+    }
+
+    int32_t ret = CQ_setGroupBan(ac, groupID, QQID, duration);
     PyGILState_Release(gstate);
     return PyLong_FromLong(ret);
 }
