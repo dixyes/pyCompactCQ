@@ -1,0 +1,3 @@
+[submodule "cqsdk-vc"]
+	path = proplib/cqsdk-vc
+	url = https://github.com/CoolQ/cqsdk-vc
