@@ -32,8 +32,18 @@ class Bot():
 
 待补全
 
-## 问题
+## 构建
+### Clang/gcc直接编译 不使用ide/gnumake之类的
 
+1. 安装clang/gcc(gcc 在win怎么安来着), 将build.bat里面`set CC=clang`改成你的编译器名称
+
+2. 在目录运行build.bat
+
+### visual studio
+
+(vs分支,待完成)
+
+## 问题
 ### 已知问题
 
 - 重载dll时Py_Finalize玄学崩溃
