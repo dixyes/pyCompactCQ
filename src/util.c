@@ -64,7 +64,7 @@ void logx(const char * tag, LOGGER_TYPE type, const char * format, ...) {
     va_start(args, format);
     vsnprintf(_logxbuf, 4096, format, args);
     va_end(args);
-    CQ_addLog(ac, type, tag, _logxbuf);
+    CQ_addLog(ac, cqlogtype, tag, _logxbuf);
 }
 
 /*
@@ -85,7 +85,7 @@ PyObject* ptype, *pvalue, *ptraceback;
 */
 void _catchPyExc(const char * ln) {
     PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-    char * te = (char *)PyUnicode_AsUTF8(PyObject_Repr(ptype));
+    //char * te = (char *)PyUnicode_AsUTF8(PyObject_Repr(ptype));
     logx("pyException", LOGGER_ERROR, "%s etype: %s", ln, PyUnicode_AsUTF8(PyObject_Repr(ptype)));
     logx("pyException", LOGGER_ERROR, "%s evalue: %s", ln, PyUnicode_AsUTF8(PyObject_Repr(pvalue)));
     //seems no use...

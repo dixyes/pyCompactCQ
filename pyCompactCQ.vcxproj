@@ -90,7 +90,8 @@ python $(SolutionDir)fuckgb.py $(SolutionDir)src/texts.h
       <Message>autolist and fuckGB</Message>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy /Y $(TargetPath) $(CQPDir)app\</Command>
+      <Command>xcopy /Y $(TargetPath) $(CQPDir)app\
+xcopy /Y $(ProjectDir)cn.dixyes.pyc.json $(CQPDir)app\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -124,6 +125,10 @@ python $(SolutionDir)fuckgb.py $(SolutionDir)src/texts.h
     <PreBuildEvent>
       <Message>autolist and fuckGB</Message>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy /Y $(TargetPath) $(CQPDir)app\
+xcopy /Y $(ProjectDir)cn.dixyes.pyc.json $(CQPDir)app\</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\dllmain.c" />
