@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#-*- coding:utf8 -*-
+#-*- coding:utf-8 -*-
 
 # pyCompact helper
 # copyright 2017-2018 Yun Dou (dixyes) <me@dixy.es>
@@ -12,7 +12,6 @@ __version__="0.0.1"
 __email__="me@dixy.es"
 
 import inspect,ntpath,sys
-from enum import Enum
 
 caller = lambda : "{0[1]}:{0[2]}".format(inspect.getouterframes(inspect.currentframe(),0)[2])
 
@@ -58,6 +57,14 @@ except:
     pass
 if not cqapi.__version__ == __version__:
     cqapi.log("not matched api version, update you helper.py!", type=cqapi.CQLOG_WARNING, tag="develpoerWaring")
+
+try:
+    from enum import Enum
+except ImportError:
+    if sys.version_info[1] < 4:
+        cqapi.logger("python is older then 3.4, install enum34 package!", type=cqapi.CQLOG_WARNING, tag="develpoerWaring")
+    Enum = Object # dirty patch here
+
 
 class MsgFrom(Enum):
     FRIEND = 11 # 来自好友
