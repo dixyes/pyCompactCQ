@@ -19,7 +19,7 @@ CoolQ APIs.\
 log obj.__repr__() with CoolQ API CQ_addLog.\
 \
 :param Object obj: that object to log.\
-:param int type: this log type mentioned in cqp.h, use cqapi.CQLOG_xxx to set this.\
+:param int type: this log type mentioned in cqp.h, use cqapi.LOGGER_xxx to set this.\
 :param str tag: tag of this log.\
 :return: returns nothing\
 :throw TypeError: if argumets have bad type.\
@@ -150,14 +150,14 @@ PyMODINIT_FUNC PyInit_cqapi(void) {
     PyModule_AddIntConstant(module, "REQUEST_DENY", REQUEST_DENY);// 请求_拒绝
     PyModule_AddIntConstant(module, "REQUEST_GROUPADD", REQUEST_GROUPADD);// 请求_群添加
     PyModule_AddIntConstant(module, "REQUEST_GROUPINVITE", REQUEST_GROUPINVITE);// 请求_群邀请
-    PyModule_AddIntConstant(module, "CQLOG_DEBUG", CQLOG_DEBUG);// 调试 灰色
+    PyModule_AddIntConstant(module, "LOGGER_DEBUG", LOGGER_DEBUG);// 调试 灰色
     PyModule_AddIntConstant(module, "LOGGER_INFO", LOGGER_INFO);// 信息 黑色
     PyModule_AddIntConstant(module, "LOGGER_INFOSUCCESS", LOGGER_INFOSUCCESS);// 信息(成功) 紫色
     PyModule_AddIntConstant(module, "LOGGER_INFORECV", LOGGER_INFORECV);// 信息(接收) 蓝色
     PyModule_AddIntConstant(module, "LOGGER_INFOSEND", LOGGER_INFOSEND);// 信息(发送) 绿色
     PyModule_AddIntConstant(module, "LOGGER_WARNING", LOGGER_WARNING);// 警告 橙色
     PyModule_AddIntConstant(module, "LOGGER_ERROR", LOGGER_ERROR);// 错误 红色
-    PyModule_AddIntConstant(module, "CQLOG_FATAL", CQLOG_FATAL);// 致命错误 深红
+    PyModule_AddIntConstant(module, "LOGGER_FATAL", LOGGER_FATAL);// 致命错误 深红
     PyGILState_Release(gstate);
     return module;
 }
@@ -257,7 +257,7 @@ static PyObject * cqDeleteMsg(PyObject *self, PyObject *args)
 
 /*
 * 使用CQ_sendLike赞
-* 对应py的api cqapi.sendlike(msgId)
+* 对应py的api cqapi.sendlike(id)
 * 参数 id:目标qq号
 * 返回: ?? 不知道，原样返回
 * 异常:在kwarg类型不对时抛出TypeError（可能吧，别犯这错误就行）

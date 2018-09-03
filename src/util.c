@@ -41,7 +41,7 @@ inline int convertType(LOGGER_TYPE lt) {
     case LOGGER_FATAL:
         return CQLOG_FATAL;
     default:
-        return LOGGER_INFO;
+        return CQLOG_INFO;
     }
     return -1; // never excuted
 }
