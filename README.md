@@ -55,7 +55,7 @@ class Bot():
 
 宏名称 | 值 | 说明 |
 ------ | -- | ---- |
-CQPDir | CPQ.exe所在目录 | 以“\”结尾， 可以使用内置宏 如`$(ProjectDir)..\CQP\`
+CQPDir | CQP.exe所在目录 | 以“\”结尾， 可以使用内置宏 如`$(ProjectDir)..\CQP\`
 DebugablePythonDir | 可以调试的python3x_d.dll/python3x.dll所在目录 | 最好使用绝对路径，需要转义，不以“\\”结尾，如`..\\Python-3.7.0\\PCbuild\\win32`
 USE_PYD | "USE_PYD=L"$(DebugablePythonDir)"" | <-复制粘贴
 
