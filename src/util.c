@@ -10,6 +10,7 @@ char * _leMsg = NULL;
 uint32_t _leCode = 0;
 char * _logxbuf = NULL;
 int pyVer = 0;
+const char* appPath = NULL;
 
 typedef enum {
     LOGGER_DEBUG,
@@ -49,6 +50,7 @@ inline int convertType(LOGGER_TYPE lt) {
 void util_init() {
     _logxbuf = malloc(4096);
     _leMsg = malloc(4096);
+    appPath = CQ_getAppDirectory(ac);
 }
 void util_free() {
     free(_logxbuf);

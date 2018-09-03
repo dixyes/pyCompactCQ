@@ -9,8 +9,8 @@ MAKR = r"[ \t]*/\*[ \t]*MAKR[ \t]*\*/" # yep that's not typo, neither mian
 ENDMAKR = r"[ \t]*/\*[ \t]*ENDMAKR[ \t]*\*/"
 TMPL = "{0[0]} = ({0[1]})GetProcAddress(py_module, \"{0[0]}\");\n    _checkPyFunction({0[0]});\n"
 
-reFunction = re.compile(r"([a-zA-Z0-9_* ]*\()[ \t]*\*[ \t]*([a-zA-z_][a-zA-z0-9_]*)[ \t]*(\)[a-zA-Z0-9_* (),.\[\]]*);")
-reVariable = re.compile(r"([a-zA-Z0-9_* ]*)[ \t]+([a-zA-z0-9_]+)[ \t]*[ \t]*;")
+reFunction = re.compile(r"([a-zA-Z0-9_* ]*\()[ \t]*\*[ \t]*([a-zA-z_][a-zA-z0-9_]*)[ \t]*(\)[a-zA-Z0-9_* (),.\[\]]*);[ \t]*(//.*)*")
+reVariable = re.compile(r"([a-zA-Z0-9_* ]*)[ \t]+([a-zA-z0-9_]+)[ \t]*[ \t]*;[ \t]*(//.*)*")
 
 def extractIdentifier(x):
     ret = reFunction.search(x)
@@ -22,7 +22,7 @@ def extractIdentifier(x):
             raise Exception("not good partten:",x)
         #print((ret.groups()[1], ret.groups()[0]))
         return (ret.groups()[1], ret.groups()[0])
-    raise Exception("not good partten:",x)
+    raise Exception("not good partten: %s"%x)
 
 def mian():
     shutil.copy(sys.argv[1],sys.argv[1]+".bak")

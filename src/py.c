@@ -65,9 +65,9 @@ const char* dirtyPyUnicode_AsUTF8(PyObject *unicode) {
 int py_load(wchar_t * dllName){
     if (NULL == dllName) {
 #ifdef _DEBUG
-        py_module = LoadLibraryExW(L"python37_d.dll", NULL,0);
+        py_module = LoadLibraryExW(dllName, NULL,0);
 #else
-        py_module = LoadLibraryExW(L"python37.dll", NULL,0);
+        py_module = LoadLibraryExW(dllName, NULL,0);
 #endif    
     }
     else {
@@ -104,6 +104,8 @@ int py_load(wchar_t * dllName){
     _checkPyFunction(PyEval_CallMethod);
     PyEval_InitThreads = (void (__cdecl *)(void))GetProcAddress(py_module, "PyEval_InitThreads");
     _checkPyFunction(PyEval_InitThreads);
+    PyEval_ReInitThreads = (void (__cdecl *)(void))GetProcAddress(py_module, "PyEval_ReInitThreads");
+    _checkPyFunction(PyEval_ReInitThreads);
     PyEval_ReleaseThread = (void (__cdecl *)(PyThreadState *tstate))GetProcAddress(py_module, "PyEval_ReleaseThread");
     _checkPyFunction(PyEval_ReleaseThread);
     PyGILState_Ensure = (PyGILState_STATE(__cdecl *)(void))GetProcAddress(py_module, "PyGILState_Ensure");
@@ -124,6 +126,8 @@ int py_load(wchar_t * dllName){
     _checkPyFunction(PyLong_FromLongLong);
     PyModule_AddIntConstant = (int(__cdecl *)(PyObject *module, const char *name, long value))GetProcAddress(py_module, "PyModule_AddIntConstant");
     _checkPyFunction(PyModule_AddIntConstant);
+    PyModule_AddObject = (int (__cdecl *)(PyObject *module, const char *name, PyObject *value))GetProcAddress(py_module, "PyModule_AddObject");
+    _checkPyFunction(PyModule_AddObject);
     PyModule_AddStringConstant = (int(__cdecl *)(PyObject *module, const char *name, const char *value))GetProcAddress(py_module, "PyModule_AddStringConstant");
     _checkPyFunction(PyModule_AddStringConstant);
     PyModule_GetDict = (PyObject* (__cdecl *) (PyObject *module))GetProcAddress(py_module, "PyModule_GetDict");
@@ -231,15 +235,11 @@ PyMODINIT_FUNC PyInit_cqapi(void); // 声明函数，用于PyImport_AppendInitta
 PyObject *pyoGlobal = NULL;
 PyObject *pyoGlobalDict = NULL;
 /*
-* 初始化python虚拟机/解释器/随便你叫它啥,加载入口点
+* 初始化python虚拟机/解释器/随便你叫它啥
 * @return 返回初始化结果枚举：
 *         ERR_PYAPI_FAIL Python API失败
-*         ERR_EP_CANT_OPEN ep文件打不开
-*         ERR_EP_FAIL ep执行失败
 */
 int py_init(){
-    int retCode = 0; // py api return code
-
     // make cqapi pymodule
     PyImport_AppendInittab("cqapi", PyInit_cqapi);
 
@@ -251,61 +251,71 @@ int py_init(){
 
     // release GIL and re-accquire it
     PyEval_InitThreads();
-    PyEval_ReleaseThread(PyThreadState_Get()); //TODO: use un checked version of this
+    py_intLoaded = true;
+    PyEval_ReleaseThread(PyThreadState_Get());
+
+    //fuckGIL();
+    return 0;
+}
+
+/*
+* 加载蛋疼（Egg Pain）文件
+* @return 返回初始化结果枚举：
+*         ERR_PYAPI_FAIL Python API失败
+*/
+int py_initEp() {
+    int retCode = 0;
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-    
-    py_intLoaded = true;
 
     // append appdir to python src path
-    const char* appPath = CQ_getAppDirectory(ac);
     //  pyoSys is py object sys
     //  pyoSys_path is py object sys.path
-    PyObject *pyoSys = PyImport_ImportModule("sys");_checkPyObj(pyoSys);
-    PyObject *pyoSys_path = PyObject_GetAttrString(pyoSys, "path");_checkPyObj(pyoSys_path);
-    if ( 0 != (retCode = PyList_Append(pyoSys_path, PyUnicode_FromString(appPath)))){
-        logd("checkPyObj","fucked up with code %d", retCode);
+    PyObject *pyoSys = PyImport_ImportModule("sys"); _checkPyObj(pyoSys);
+    PyObject *pyoSys_path = PyObject_GetAttrString(pyoSys, "path"); _checkPyObj(pyoSys_path);
+    if (0 != (retCode = PyList_Append(pyoSys_path, PyUnicode_FromString(appPath)))) {
+        logd("checkPyObj", "fucked up with code %d", retCode);
         PyGILState_Release(gstate);
         return ERR_PYAPI_FAIL;
     };
-    
+
     // prepare entrypoint file
-    pyoGlobal = PyImport_AddModule("__main__");_checkPyObj(pyoGlobal);
+    pyoGlobal = PyImport_AddModule("__main__"); _checkPyObj(pyoGlobal);
     //logd("miao","sreftotal %d" ,_Py_RefTotal);
     Py_INCREF(pyoGlobal);
     //logd("miao","reftotal %d" ,_Py_RefTotal);
-    pyoGlobalDict = PyModule_GetDict(pyoGlobal);_checkPyObj(pyoGlobalDict);
+    pyoGlobalDict = PyModule_GetDict(pyoGlobal); _checkPyObj(pyoGlobalDict);
     Py_INCREF(pyoGlobalDict);
-    
+
     // open file
-    logd("openEntrypoint","load entrypoint file from %s",appPath);
+    logd("openEntrypoint", "load entrypoint file from %s", appPath);
     char * epPath = malloc(1024);
     FILE * epFd;
-    strcpy_s(epPath,strlen(appPath)+1,appPath);// pit here, however im too lazy to fix
-    strcpy_s(epPath+strlen(appPath), 18, "__entrypoint__.py\0");
+    strcpy_s(epPath, strlen(appPath) + 1, appPath);// pit here, however im too lazy to fix
+    strcpy_s(epPath + strlen(appPath), 18, "__entrypoint__.py\0");
     logi("openEntrypoint", TEXT_LOADENTRYPOINT, epPath);
     errno_t err = fopen_s(&epFd, epPath, "r");
-    if (err!=0){
+    if (err != 0) {
         //size_t errLen = strerrorlen_s(err); // why not c11?
         char* errMsg = malloc(1024);
-        strerror_s(errMsg,128,err);
+        strerror_s(errMsg, 128, err);
         loge("openEntrypoint", "failed 2 open entrypoint file:%s", errMsg);
         free(errMsg);
         free(epPath);
         PyGILState_Release(gstate);
         return ERR_EP_CANT_OPEN;
     }
-    logd("openEntrypoint","open entrypoint file %s done",epPath);
+    logd("openEntrypoint", "open entrypoint file %s done", epPath);
     //logd("openEntrypoint","fd addr %d",epFd);
     //logd("openEntrypoint","d addr %d",pyo__main___d);
     //logd("openEntrypoint","d addr %d",PyRun_FileEx);
     free(epPath);
-    
+
     // run entrypoint
     //PyImport_ImportModule("cqapi"); let user import it is also fine
-    py_botObj = PyRun_FileEx(epFd, "__entrypoint__.py", Py_file_input, pyoGlobalDict, pyoGlobalDict,1);
-    if (NULL == py_botObj){
-        loge("runEntryPoint",TEXT_LOADENTRYPOINT_FAIL);
+    py_botObj = PyRun_FileEx(epFd, "__entrypoint__.py", Py_file_input, pyoGlobalDict, pyoGlobalDict, 1);
+    if (NULL == py_botObj) {
+        loge("runEntryPoint", TEXT_LOADENTRYPOINT_FAIL);
         catchPyExc();
         PyEval_ReleaseThread(PyThreadState_Get());
         return ERR_EP_FAIL;
@@ -318,21 +328,30 @@ int py_init(){
         return 0;
     }
     py_entrypointLoaded = true;
-
-    PyGILState_Release(gstate);
-    //fuckGIL();
     return 0;
+}
+/*
+*  卸载入口点
+*/
+void py_endEp() {
+    if (py_entrypointLoaded) {
+        Py_DECREF(py_botObj);
+        Py_DECREF(pyoGlobalDict);
+        Py_DECREF(pyoGlobalDict);
+    }
 }
 
 /*
-*  卸载入口点，结束python解释器
+*  重载python解释器
 *    这个函数可能并不能完全的清干净内存，如果发现泄露请及时报告
+*     * 实际上能以任何姿势崩溃
 */
-void py_end() {
+void py_reinit() {
     if (py_intLoaded) {
         PyGILState_STATE gstate;
         gstate = PyGILState_Ensure();
-        Py_Finalize();
+        PyEval_ReInitThreads();
+        PyEval_ReleaseThread(PyThreadState_Get());
         //PyGILState_Release(gstate);
     }
 }
@@ -357,7 +376,7 @@ int py_callCallback(const char *eventName, const char * format, ...) {
             warnLevel = LOGGER_WARNING;
         }
         else {
-            warnLevel = CQLOG_DEBUG;
+            warnLevel = LOGGER_DEBUG;
         }
         lastWarned = time(NULL);
         if (!py_moduleLoaded) {

@@ -33,6 +33,7 @@ typedef enum {
 
 extern int ac; // CQAPI AC
 extern int pyVer;
+extern const char* appPath;
 
 extern void util_init();
 extern void util_free();

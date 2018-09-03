@@ -76,13 +76,16 @@ CQEVENT(int32_t, __eventEnable, 0)() {
         }
     }
     
-    if(0==pyStatus){
-        int ret = py_init(ac);
-        logd("py_init","ret = %d", ret);
-        if (0!=ret){
-            loge("py_init","python init failed");
+    if (0 == pyStatus) {
+        if (0 != (pyStatus = py_init())) {
+            loge("pyInit", "python interpreter init failed with %d", pyStatus);
             return -1;
         }
+        if (0 != (pyStatus = py_initEp())) {
+            loge("pyInitEp", "entrypoint init failed with %d", pyStatus);
+            return -1;;
+        }
+
         pluginIsEnabled = true;
     }else{
         loge("py_load", "%s", TEXT_PYTHONDLLLOADFAIL);// todo: 写个多语言支持（或许吧

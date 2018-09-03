@@ -341,6 +341,7 @@ do {\
 // marks are used in generate loadFunctions
 // DONOT REMOVE OR CHANGE THE MARK BELOW AND END MARK
 /*MAKR*/
+void (*PyEval_ReInitThreads)(void);
 void (*Py_InitializeEx) (int);
 int (*Py_IsInitialized) (void);
 void (*Py_Finalize) (void);
@@ -378,6 +379,7 @@ PyThreadState *(*PyThreadState_Get)(void);
 PyObject* (*Py_BuildValue)(const char *format, ...);
 PyObject* (*PyTuple_New)(Py_ssize_t len);
 int (*PyTuple_SetItem)(PyObject *p, Py_ssize_t pos, PyObject *o);
+int (*PyModule_AddObject)(PyObject *module, const char *name, PyObject *value);
 /*ENDMAKR*/
 // py below 3.4 dont support
 
@@ -394,6 +396,6 @@ PyObject *(*PyUnicode_FromString) (const char *u);
 PyObject* (*PyUnicode_AsEncodedString)(PyObject *unicode, const char *encoding, const char *errors);
 // no forward for this
 PyObject * (*PyModule_Create2)(struct PyModuleDef*, int apiver);
-#define PyModule_Create(x) PyModule_Create2(x, 1013) // this api version not same as python, see pydir/include/modsupport.hL132
-
+// this api version is not same as python, see pydir/include/modsupport.hL132
+#define PyModule_Create(x) PyModule_Create2(x, 1013)
 #endif // _PY_STRUCT_HEADER

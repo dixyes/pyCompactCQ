@@ -12,7 +12,9 @@
 extern int py_load(wchar_t * dllName);
 extern int py_unload();
 extern int py_init();
-extern void py_end();
+extern int py_initEp();
+extern void py_reinit();
+extern void py_endEp();
 extern int py_callCallback(const char *eventName, const char * format, ...);
 extern HANDLE py_module;
 extern bool py_moduleLoaded; // python3x.dll «∑Òº”‘ÿ

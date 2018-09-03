@@ -128,7 +128,6 @@ static struct PyModuleDef cqapiModuleDef = {
     NULL
 };
 
-
 /*
 * cqapi.__init__()的c实现
 */
@@ -158,6 +157,10 @@ PyMODINIT_FUNC PyInit_cqapi(void) {
     PyModule_AddIntConstant(module, "LOGGER_WARNING", LOGGER_WARNING);// 警告 橙色
     PyModule_AddIntConstant(module, "LOGGER_ERROR", LOGGER_ERROR);// 错误 红色
     PyModule_AddIntConstant(module, "LOGGER_FATAL", LOGGER_FATAL);// 致命错误 深红
+
+    PyModule_AddStringConstant(module, "appdir", (const char *)appPath);// 程序数据目录
+    PyModule_AddStringConstant(module, "nickname", (const char *)CQ_getLoginNick(ac));// 昵称
+    PyModule_AddObject(module, "selfqq", PyLong_FromLongLong(CQ_getLoginQQ(ac)));
     PyGILState_Release(gstate);
     return module;
 }

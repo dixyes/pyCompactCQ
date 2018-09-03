@@ -2,6 +2,8 @@
 
 又一个CoolQ的python3插件
 
+> Life is short, use Python
+
 ## 用法
 ### 最终用户
 
@@ -29,14 +31,14 @@ class Bot():
 ## python API文档
 
 ### cqapi封装（内建模块cqapi）
-版本0.0.1
+版本0.0.2
 
 ```Python3
 def cqapi(module):
     """
     CoolQ APIs
     """
-    __version__ = "0.0.1"
+    __version__ = "0.0.2"
     EVENT_IGNORE = EVENT_IGNORE # 事件_忽略
     EVENT_BLOCK = EVENT_BLOCK # 事件_拦截
     REQUEST_ALLOW = REQUEST_ALLOW # 请求_通过
@@ -73,7 +75,7 @@ def cqapi(module):
 
 ### 事件
 
-装饰器工作依赖于DummuBot的on方法，实现详见helper.py
+装饰器工作依赖于DummyBot的on方法，实现详见helper.py
 
 使用`@someBot_inherit_from_DummyBot.on("someEvent")`来修饰对应回调，则设置环境变量event
 
