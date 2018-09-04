@@ -133,8 +133,7 @@ static struct PyModuleDef cqapiModuleDef = {
 */
 PyMODINIT_FUNC PyInit_cqapi(void) {
     logd("cqapiInit", "initializing cqapi Python module");
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    ENSURE_GIL;
     PyObject* module = PyModule_Create(&cqapiModuleDef);
     // there constants is from cqp.h
     PyModule_AddStringConstant(module, "__author__", "dixyes");// set this as you like
@@ -160,8 +159,8 @@ PyMODINIT_FUNC PyInit_cqapi(void) {
 
     PyModule_AddStringConstant(module, "appdir", (const char *)appPath);// 程序数据目录
     PyModule_AddStringConstant(module, "nickname", (const char *)CQ_getLoginNick(ac));// 昵称
-    PyModule_AddObject(module, "selfqq", PyLong_FromLongLong(CQ_getLoginQQ(ac)));
-    PyGILState_Release(gstate);
+    //PyModule_AddObject(module, "selfqq", PyLong_FromLongLong(CQ_getLoginQQ(ac)));
+    RELEASE_GIL;
     return module;
 }
 
@@ -245,16 +244,15 @@ static PyObject * cqSendDM(PyObject *self, PyObject *args) {
 */
 static PyObject * cqDeleteMsg(PyObject *self, PyObject *args)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    ENSURE_GIL;
     int32_t msgId;
     if (!PyArg_ParseTuple(args, "I", &msgId)) {
         catchPyExc();
-        PyGILState_Release(gstate);
+        RELEASE_GIL;
         return NULL;
     }
     int32_t ret = CQ_deleteMsg(ac, msgId);
-    PyGILState_Release(gstate);
+    RELEASE_GIL;
     return PyLong_FromLong(ret);
 }
 

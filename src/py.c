@@ -22,6 +22,9 @@ bool py_moduleLoaded = false;
 PyObject *py_botObj = NULL;
 bool py_entrypointLoaded = false;
 bool py_intLoaded = false;
+bool py_msmLoaded = false;
+
+PyThreadState *pyMainThreadState = NULL;
 //char * _cqLoggerBuf;
 
 #define _checkPyFunction(name) {\
@@ -100,6 +103,8 @@ int py_load(wchar_t * dllName){
     _checkPyFunction(PyErr_BadArgument);
     PyErr_Fetch = (void (__cdecl *)(PyObject **ptype, PyObject **pvalue, PyObject **ptraceback))GetProcAddress(py_module, "PyErr_Fetch");
     _checkPyFunction(PyErr_Fetch);
+    PyEval_AcquireThread = (void (__cdecl *)(PyThreadState *tstate))GetProcAddress(py_module, "PyEval_AcquireThread");
+    _checkPyFunction(PyEval_AcquireThread);
     PyEval_CallMethod = (PyObject * (__cdecl *)(PyObject *obj, const char *name, const char *format, ...))GetProcAddress(py_module, "PyEval_CallMethod");
     _checkPyFunction(PyEval_CallMethod);
     PyEval_InitThreads = (void (__cdecl *)(void))GetProcAddress(py_module, "PyEval_InitThreads");
@@ -108,6 +113,10 @@ int py_load(wchar_t * dllName){
     _checkPyFunction(PyEval_ReInitThreads);
     PyEval_ReleaseThread = (void (__cdecl *)(PyThreadState *tstate))GetProcAddress(py_module, "PyEval_ReleaseThread");
     _checkPyFunction(PyEval_ReleaseThread);
+    PyEval_RestoreThread = (void (__cdecl *)(PyThreadState *tstate))GetProcAddress(py_module, "PyEval_RestoreThread");
+    _checkPyFunction(PyEval_RestoreThread);
+    PyEval_SaveThread = (PyThreadState* (__cdecl *)(void))GetProcAddress(py_module, "PyEval_SaveThread");
+    _checkPyFunction(PyEval_SaveThread);
     PyGILState_Ensure = (PyGILState_STATE(__cdecl *)(void))GetProcAddress(py_module, "PyGILState_Ensure");
     _checkPyFunction(PyGILState_Ensure);
     PyGILState_Release = (void(__cdecl *)(PyGILState_STATE))GetProcAddress(py_module, "PyGILState_Release");
@@ -140,6 +149,10 @@ int py_load(wchar_t * dllName){
     _checkPyFunction(PyObject_Repr);
     PyRun_FileEx = (PyObject* (__cdecl *) (FILE *fp, const char *filename, int start, PyObject *globals, PyObject *locals, int closeit))GetProcAddress(py_module, "PyRun_FileEx");
     _checkPyFunction(PyRun_FileEx);
+    PyRun_SimpleFileEx = (int (__cdecl *)(FILE *fp, const char *filename, int closeit))GetProcAddress(py_module, "PyRun_SimpleFileEx");
+    _checkPyFunction(PyRun_SimpleFileEx);
+    PySys_SetPath = (void (__cdecl *)(const wchar_t *path))GetProcAddress(py_module, "PySys_SetPath");
+    _checkPyFunction(PySys_SetPath);
     PyThreadState_Get = (PyThreadState *(__cdecl *)(void))GetProcAddress(py_module, "PyThreadState_Get");
     _checkPyFunction(PyThreadState_Get);
     PyTuple_New = (PyObject* (__cdecl *)(Py_ssize_t len))GetProcAddress(py_module, "PyTuple_New");
@@ -148,12 +161,16 @@ int py_load(wchar_t * dllName){
     _checkPyFunction(PyTuple_SetItem);
     Py_BuildValue = (PyObject* (__cdecl *)(const char *format, ...))GetProcAddress(py_module, "Py_BuildValue");
     _checkPyFunction(Py_BuildValue);
+    Py_EndInterpreter = (void(__cdecl *)(PyThreadState *tstate))GetProcAddress(py_module, "Py_EndInterpreter");
+    _checkPyFunction(Py_EndInterpreter);
     Py_Finalize = (void (__cdecl *) (void))GetProcAddress(py_module, "Py_Finalize");
     _checkPyFunction(Py_Finalize);
     Py_InitializeEx = (void (__cdecl *) (int))GetProcAddress(py_module, "Py_InitializeEx");
     _checkPyFunction(Py_InitializeEx);
     Py_IsInitialized = (int (__cdecl *) (void))GetProcAddress(py_module, "Py_IsInitialized");
     _checkPyFunction(Py_IsInitialized);
+    Py_NewInterpreter = (PyThreadState* (__cdecl *)(void))GetProcAddress(py_module, "Py_NewInterpreter");
+    _checkPyFunction(Py_NewInterpreter);
     Py_VaBuildValue = (PyObject* (__cdecl *)(const char *format, va_list vargs))GetProcAddress(py_module, "Py_VaBuildValue");
     _checkPyFunction(Py_VaBuildValue);
     _Py_NoneStruct = (PyObject*)GetProcAddress(py_module, "_Py_NoneStruct");
@@ -228,36 +245,69 @@ PyMODINIT_FUNC PyInit_cqapi(void); // 声明函数，用于PyImport_AppendInitta
     if(NULL==name){\
         loge("checkPyObj", "fucked up with:%s",#name);\
         Py_Finalize();\
-        PyGILState_Release(gstate);\
+        RELEASE_GIL;\
         return ERR_PYAPI_FAIL;\
     }\
 }
 PyObject *pyoGlobal = NULL;
 PyObject *pyoGlobalDict = NULL;
 /*
-* 初始化python虚拟机/解释器/随便你叫它啥
+* 初始化python， 新建（子）解释器
 * @return 返回初始化结果枚举：
 *         ERR_PYAPI_FAIL Python API失败
 */
 int py_init(){
-    // make cqapi pymodule
-    PyImport_AppendInittab("cqapi", PyInit_cqapi);
-
-    // init py interupter
-    Py_InitializeEx(0);
+    // init py machinisms
     if(0==Py_IsInitialized()){
-        return ERR_PYAPI_FAIL;
+        // make cqapi pymodule
+        PyImport_AppendInittab("cqapi", PyInit_cqapi);
+        Py_InitializeEx(0);
+        if(0 == Py_IsInitialized())
+            return ERR_PYAPI_FAIL;
+        PyEval_InitThreads();
+        wchar_t * pathBuf = malloc(sizeof(wchar_t)*MAX_PATH);
+        wsprintfW(pathBuf, L"%s", appPath);
+        PyObject *pyoSys = pyoSys = PyImport_ImportModule("sys");
+        PyObject *pyoSys_path = PyObject_GetAttrString(pyoSys, "path");
+        if (0 != PyList_Append(pyoSys_path, PyUnicode_FromString(appPath))) {
+            logd("checkPyObj", "fucked up with sys.path setting");
+            return ERR_PYAPI_FAIL;
+        };
+
+        free(pathBuf);
+        py_msmLoaded = true;
     }
-
-    // release GIL and re-accquire it
-    PyEval_InitThreads();
-    py_intLoaded = true;
     PyEval_ReleaseThread(PyThreadState_Get());
-
-    //fuckGIL();
+    py_intLoaded = true;
+    FUCKGIL;
     return 0;
 }
+/*
+*  结束python解释器
+*    这个函数可能
+*     * 实际上能以任何姿势崩溃
+*/
+void py_end() {
+    if (!py_msmLoaded) {
+        loge("pyEnd", "mechanism is not loaded");
+        return;
+    }
+    if (py_intLoaded) {
+        py_intLoaded = false;
 
+        if (pyMainThreadState) {
+            PyEval_AcquireThread(pyMainThreadState);
+            Py_EndInterpreter(pyMainThreadState);
+        }
+
+        logd("pyEnd", "finalize done");
+    }
+}
+void py_finalize() {
+    Py_Finalize();
+}
+
+bool _sysprops = false;
 /*
 * 加载蛋疼（Egg Pain）文件
 * @return 返回初始化结果枚举：
@@ -265,28 +315,16 @@ int py_init(){
 */
 int py_initEp() {
     int retCode = 0;
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
-
-    // append appdir to python src path
-    //  pyoSys is py object sys
-    //  pyoSys_path is py object sys.path
-    PyObject *pyoSys = PyImport_ImportModule("sys"); _checkPyObj(pyoSys);
+    ENSURE_GIL;
+    PyObject *pyoSys = pyoSys = PyImport_ImportModule("sys"); _checkPyObj(pyoSys);
     PyObject *pyoSys_path = PyObject_GetAttrString(pyoSys, "path"); _checkPyObj(pyoSys_path);
-    if (0 != (retCode = PyList_Append(pyoSys_path, PyUnicode_FromString(appPath)))) {
-        logd("checkPyObj", "fucked up with code %d", retCode);
-        PyGILState_Release(gstate);
-        return ERR_PYAPI_FAIL;
-    };
 
-    // prepare entrypoint file
+    
     pyoGlobal = PyImport_AddModule("__main__"); _checkPyObj(pyoGlobal);
-    //logd("miao","sreftotal %d" ,_Py_RefTotal);
-    Py_INCREF(pyoGlobal);
-    //logd("miao","reftotal %d" ,_Py_RefTotal);
     pyoGlobalDict = PyModule_GetDict(pyoGlobal); _checkPyObj(pyoGlobalDict);
-    Py_INCREF(pyoGlobalDict);
-
+    
+    logd("ri", "%s", PyUnicode_AsUTF8(PyObject_Repr(pyoSys_path)));
+    
     // open file
     logd("openEntrypoint", "load entrypoint file from %s", appPath);
     char * epPath = malloc(1024);
@@ -302,57 +340,52 @@ int py_initEp() {
         loge("openEntrypoint", "failed 2 open entrypoint file:%s", errMsg);
         free(errMsg);
         free(epPath);
-        PyGILState_Release(gstate);
+        RELEASE_GIL;
         return ERR_EP_CANT_OPEN;
     }
     logd("openEntrypoint", "open entrypoint file %s done", epPath);
     //logd("openEntrypoint","fd addr %d",epFd);
     //logd("openEntrypoint","d addr %d",pyo__main___d);
     //logd("openEntrypoint","d addr %d",PyRun_FileEx);
-    free(epPath);
+    
 
     // run entrypoint
-    //PyImport_ImportModule("cqapi"); let user import it is also fine
+    //PyImport_ImportModule("cqapi"); // let user import it is also fine
     py_botObj = PyRun_FileEx(epFd, "__entrypoint__.py", Py_file_input, pyoGlobalDict, pyoGlobalDict, 1);
+    //PyRun_SimpleFileEx(epFd, "__entrypoint__.py", 1);
+    free(epPath);
     if (NULL == py_botObj) {
         loge("runEntryPoint", TEXT_LOADENTRYPOINT_FAIL);
         catchPyExc();
-        PyEval_ReleaseThread(PyThreadState_Get());
+        RELEASE_GIL;
         return ERR_EP_FAIL;
     }
-    Py_INCREF(py_botObj);
 
     py_botObj = PyDict_GetItemString(pyoGlobalDict, "__bot__");
     if (NULL == py_botObj) {
         logx("runEntryPoint", LOGGER_WARNING, TEXT_NOBOTGLOBALVAR);
+        RELEASE_GIL;
         return 0;
     }
     py_entrypointLoaded = true;
+    RELEASE_GIL;
     return 0;
+}
+inline PyObject* callDelMethod(PyObject * o) {
+    if (o->ob_type)
+        if (o->ob_type->tp_del)
+            o->ob_type->tp_del(py_botObj);
+    return NULL;
 }
 /*
 *  卸载入口点
 */
 void py_endEp() {
     if (py_entrypointLoaded) {
-        Py_DECREF(py_botObj);
-        Py_DECREF(pyoGlobalDict);
-        Py_DECREF(pyoGlobalDict);
-    }
-}
-
-/*
-*  重载python解释器
-*    这个函数可能并不能完全的清干净内存，如果发现泄露请及时报告
-*     * 实际上能以任何姿势崩溃
-*/
-void py_reinit() {
-    if (py_intLoaded) {
-        PyGILState_STATE gstate;
-        gstate = PyGILState_Ensure();
-        PyEval_ReInitThreads();
-        PyEval_ReleaseThread(PyThreadState_Get());
-        //PyGILState_Release(gstate);
+        py_entrypointLoaded = false;
+        ENSURE_GIL;
+        py_botObj = callDelMethod(py_botObj);
+        RELEASE_GIL;
     }
 }
 
@@ -370,7 +403,7 @@ int warnLevel = LOGGER_WARNING;
 * @note 当发生错误时这个函数不abort/抛出异常，仅做日志并返回EVENT_IGNORE
 */
 int py_callCallback(const char *eventName, const char * format, ...) {
-    // warn not initedthings and warn rate limit
+    // warn not inited things and warn rate limit
     if (!(py_moduleLoaded && py_intLoaded && py_entrypointLoaded)) {
         if (time(NULL) - lastWarned > WARNCOOLDOWN) {
             warnLevel = LOGGER_WARNING;
@@ -390,8 +423,8 @@ int py_callCallback(const char *eventName, const char * format, ...) {
     }
 
     // get py GIL
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    ENSURE_GIL;
+
     // build argsTuple
     va_list arg;
     va_start(arg, format);
@@ -400,14 +433,14 @@ int py_callCallback(const char *eventName, const char * format, ...) {
     va_end(arg);
     if (NULL == eventTuple) {
         //loge("callCallback", "fail!");
-        PyGILState_Release(gstate);
+        RELEASE_GIL;
         catchPyExc();
         return retCode;
     }
     PyObject *argsTuple = Py_BuildValue("sO", eventName,eventTuple);
     if (NULL == argsTuple) {
         //loge("callCallback", "fail!");
-        PyGILState_Release(gstate);
+        RELEASE_GIL;
         catchPyExc();
         return retCode;
     }
@@ -420,12 +453,12 @@ int py_callCallback(const char *eventName, const char * format, ...) {
     PyObject* pyoCb = PyObject_GetAttrString(py_botObj, "emit");
     if (NULL == pyoCb) {
         catchPyExc();
-        PyGILState_Release(gstate);
+        RELEASE_GIL;
         return retCode;
     }
     if (!PyCallable_Check(pyoCb)) {
         loge("callCallback", "emitter is not callable");
-        PyGILState_Release(gstate);
+        RELEASE_GIL;
         return retCode;
     }
 #ifdef _DEBUG
@@ -434,7 +467,7 @@ int py_callCallback(const char *eventName, const char * format, ...) {
     PyObject *pyoRet = PyObject_Call(pyoCb, argsTuple, PyDict_New());
     if (NULL == pyoRet) {
         catchPyExc();
-        PyGILState_Release(gstate);
+        RELEASE_GIL;
         return retCode;
     }
 
@@ -443,12 +476,12 @@ int py_callCallback(const char *eventName, const char * format, ...) {
         PyObject * ptype, * pvalue, * ptraceback;
         PyErr_Fetch(&ptype, &pvalue, &ptraceback);// clear pyerr
         logi("callCallback", "failed convert return value(%s) of emitter(%s)", PyUnicode_AsUTF8(PyObject_Repr(pyoRet)), PyUnicode_AsUTF8(PyObject_Repr(pyoCb)));
-        PyGILState_Release(gstate);
+        RELEASE_GIL;
         return EVENT_IGNORE;
     }
 
     // release GIL
-    PyGILState_Release(gstate);
+    RELEASE_GIL;
     //fuckGIL();
     return retCode;
 }

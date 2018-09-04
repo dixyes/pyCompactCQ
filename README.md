@@ -150,7 +150,7 @@ USE_PYD | "USE_PYD=L"$(DebugablePythonDir)"" | <-复制粘贴
 ## 问题
 ### 已知问题
 
-- 重载dll时Py_Finalize玄学崩溃
+- ---重载dll时Py_Finalize玄学崩溃--- 功能已移除，只能加载一次dll（由于Py_FinalizeEx[BUG](https://docs.python.org/3/c-api/init.html#c.Py_FinalizeEx)，py解释器在python3x.dll下只能finalize一次）
 
 ### 反馈与求助
 

@@ -13,13 +13,18 @@ extern int py_load(wchar_t * dllName);
 extern int py_unload();
 extern int py_init();
 extern int py_initEp();
-extern void py_reinit();
+//extern void py_end();
 extern void py_endEp();
 extern int py_callCallback(const char *eventName, const char * format, ...);
 extern HANDLE py_module;
 extern bool py_moduleLoaded; // python3x.dll是否加载
 extern bool py_entrypointLoaded; // 入口点文件是否加载
 extern bool py_intLoaded; // python解释器是否加载
+extern bool py_msmLoaded; // python处理机制是否加载
+
+#ifdef _DEBUG
+extern void py_finalize(void);
+#endif
 
 #endif // _PY_HEADER
 

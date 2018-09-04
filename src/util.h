@@ -50,8 +50,8 @@ extern void _catchPyExc(const char * ln);
 
 // if not in debug build, disable logd
 #if !_DEBUG
-#   undef logd
-#   define logd(...)
+//#   undef logd
+//#   define logd(...)
 #endif // _DEBUG
 
 #define showLeLn(x) showLe(x, __FILE__ ":" LINE_STRING)

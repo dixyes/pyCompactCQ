@@ -375,11 +375,18 @@ void (*PyEval_InitThreads)(void);
 PyGILState_STATE(*PyGILState_Ensure)(void);
 void(*PyGILState_Release)(PyGILState_STATE);
 void (*PyEval_ReleaseThread)(PyThreadState *tstate);
+void (*PyEval_AcquireThread)(PyThreadState *tstate);
 PyThreadState *(*PyThreadState_Get)(void);
 PyObject* (*Py_BuildValue)(const char *format, ...);
 PyObject* (*PyTuple_New)(Py_ssize_t len);
 int (*PyTuple_SetItem)(PyObject *p, Py_ssize_t pos, PyObject *o);
 int (*PyModule_AddObject)(PyObject *module, const char *name, PyObject *value);
+PyThreadState* (*PyEval_SaveThread)(void);
+void (*PyEval_RestoreThread)(PyThreadState *tstate);
+PyThreadState* (*Py_NewInterpreter)(void);
+void(*Py_EndInterpreter)(PyThreadState *tstate);
+int (*PyRun_SimpleFileEx)(FILE *fp, const char *filename, int closeit);
+void (*PySys_SetPath)(const wchar_t *path);
 /*ENDMAKR*/
 // py below 3.4 dont support
 
@@ -398,4 +405,8 @@ PyObject* (*PyUnicode_AsEncodedString)(PyObject *unicode, const char *encoding, 
 PyObject * (*PyModule_Create2)(struct PyModuleDef*, int apiver);
 // this api version is not same as python, see pydir/include/modsupport.hL132
 #define PyModule_Create(x) PyModule_Create2(x, 1013)
+
+#define FUCKGIL logd("fuckGIL", "gil is %d", PyGILState_Check());
+#define ENSURE_GIL PyGILState_STATE gstate = PyGILState_Ensure(); FUCKGIL
+#define RELEASE_GIL PyGILState_Release(gstate); FUCKGIL
 #endif // _PY_STRUCT_HEADER

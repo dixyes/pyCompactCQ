@@ -68,6 +68,8 @@ to be bound by the terms and conditions of this License Agreement."
 pyCompact for CoolQ - \u4e00\u4e2a\uff08\u8fa3\u9e21\uff09\u9177Q Python3\u63d2\u4ef6\n\
 copyright 2017-2018 dixyes <me@dixy.es>\n\
 \u672c\u8f6f\u4ef6\u91c7\u7528\u004d\u0049\u0054\u5f00\u6e90\u8bb8\u53ef\u8bc1\u6388\u6743\u3002"
+#define LTEXT_NORELOADDLL L""
+#define LTEXT_NORELOADDLLTITLE L""
 
 // generated definations here:
 // MERK

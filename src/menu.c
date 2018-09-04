@@ -13,12 +13,24 @@
 CQEVENT(int32_t, __menuReloadScript, 0)() {
     logi("reloadEntrypoint", TEXT_REQUIRERELOAD);
     py_endEp();
-    py_reinit();
+    //py_end();
+    //py_init();
     py_initEp();
     return 0;
 }
 CQEVENT(int32_t, __menuLoadModule, 0)() {
-    logi("loadSelectedModule", TEXT_RELOADDLL); // TODO: 这里漏内存， 然而不同版本api太蛋疼
+    logi("loadSelectedModule", TEXT_RELOADDLL);
+    if (py_msmLoaded) {
+#ifdef _DEBUG
+        logd("loadSelectedModule", "forceing unload python mechanism in debug build");
+        py_finalize();
+        py_msmLoaded = false;
+#else
+        logx("loadSelectedModule", LOGGER_WARNING, "nope,you can't REload dll");
+        MessageBoxW(NULL,LTEXT_NORELOADDLL,LTEXT_NORELOADDLLTITLE,MB_ICONERROR|MB_OK);
+        return -1;
+#endif
+    }
     if (py_moduleLoaded) {
         py_unload();
     }
@@ -35,6 +47,7 @@ CQEVENT(int32_t, __menuLoadModule, 0)() {
     logi("loadSelectedModule", TEXT_CHOSENPYTHON, ofn.lpstrFile);
     py_load(ofn.lpstrFile);
     py_init();
+    py_initEp();
     return 0;
 }
 
