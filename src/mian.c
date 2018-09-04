@@ -58,7 +58,7 @@ CQEVENT(int32_t, __eventExit, 0)() {
 CQEVENT(int32_t, __eventEnable, 0)() {
     // allco pyName buffer first
     wchar_t * pyName = malloc(MAX_PATH+1 * sizeof(wchar_t));
-    for (pyVer = MAX_PY_VER; pyVer >= MIN_PY_VER; pyVer--) {
+    for (int pyVer = MAX_PY_VER; pyVer >= MIN_PY_VER; pyVer--) {
 #ifdef _DEBUG
 #   ifdef USE_PYD
         wsprintfW(pyName, USE_PYD L"\\"  L"python%d_d.dll", pyVer);

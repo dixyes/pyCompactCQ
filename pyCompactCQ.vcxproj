@@ -82,16 +82,16 @@
       </Command>
     </CustomBuildStep>
     <PreBuildEvent>
-      <Command>python $(SolutionDir)autolist.py $(SolutionDir)src/py.c  $(SolutionDir)src/pys.h
-python $(SolutionDir)fuckgb.py $(SolutionDir)src/texts.h
-</Command>
+      <Command>python $(SolutionDir)autolist.py $(ProjectDir)src/py.c  $(ProjectDir)src/pys.h
+python $(SolutionDir)fuckgb.py $(ProjectDir)src/texts.h
+python $(SolutionDir)mkjson.py $(ProjectDir)build/cn.dixyes.pyc.json $(ConfigurationName)</Command>
     </PreBuildEvent>
     <PreBuildEvent>
-      <Message>autolist and fuckGB</Message>
+      <Message>autolist, fuckGB and makejson</Message>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy /Y $(TargetPath) $(CQPDir)app\
-xcopy /Y $(ProjectDir)cn.dixyes.pyc.json $(CQPDir)app\</Command>
+xcopy /Y $(ProjectDir)build\cn.dixyes.pyc.json $(CQPDir)app\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -118,16 +118,16 @@ xcopy /Y $(ProjectDir)cn.dixyes.pyc.json $(CQPDir)app\</Command>
       </Command>
     </CustomBuildStep>
     <PreBuildEvent>
-      <Command>python $(SolutionDir)autolist.py $(SolutionDir)src/py.c  $(SolutionDir)src/pys.h
-python $(SolutionDir)fuckgb.py $(SolutionDir)src/texts.h
-</Command>
+      <Command>python $(SolutionDir)autolist.py $(ProjectDir)src/py.c  $(ProjectDir)src/pys.h
+python $(SolutionDir)fuckgb.py $(ProjectDir)src/texts.h
+python $(SolutionDir)mkjson.py $(ProjectDir)build/cn.dixyes.pyc.json $(ConfigurationName)</Command>
     </PreBuildEvent>
     <PreBuildEvent>
-      <Message>autolist and fuckGB</Message>
+      <Message>autolist, fuckGB and makejson</Message>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>xcopy /Y $(TargetPath) $(CQPDir)app\
-xcopy /Y $(ProjectDir)cn.dixyes.pyc.json $(CQPDir)app\</Command>
+xcopy /Y $(ProjectDir)build\cn.dixyes.pyc.json $(CQPDir)app\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

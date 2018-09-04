@@ -12,9 +12,8 @@
 
 CQEVENT(int32_t, __menuReloadScript, 0)() {
     logi("reloadEntrypoint", TEXT_REQUIRERELOAD);
-    py_endEp();
-    //py_end();
-    //py_init();
+    py_finalize();
+    py_init();
     py_initEp();
     return 0;
 }

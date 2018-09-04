@@ -24,6 +24,8 @@ bool py_entrypointLoaded = false;
 bool py_intLoaded = false;
 bool py_msmLoaded = false;
 
+PyObject *pyoGlobal = NULL;
+PyObject *pyoGlobalDict = NULL;
 PyThreadState *pyMainThreadState = NULL;
 //char * _cqLoggerBuf;
 
@@ -95,10 +97,16 @@ int py_load(wchar_t * dllName){
     _checkPyFunction(PyBytes_AsString);
     PyCallable_Check = (int (__cdecl *)(PyObject *o))GetProcAddress(py_module, "PyCallable_Check");
     _checkPyFunction(PyCallable_Check);
+    PyDict_Clear = (void (__cdecl *)(PyObject *p))GetProcAddress(py_module, "PyDict_Clear");
+    _checkPyFunction(PyDict_Clear);
+    PyDict_DelItemString = (int (__cdecl *)(PyObject *p, const char *key))GetProcAddress(py_module, "PyDict_DelItemString");
+    _checkPyFunction(PyDict_DelItemString);
     PyDict_GetItemString = (PyObject* (__cdecl *)(PyObject *p, const char *key))GetProcAddress(py_module, "PyDict_GetItemString");
     _checkPyFunction(PyDict_GetItemString);
     PyDict_New = (PyObject* (__cdecl *)())GetProcAddress(py_module, "PyDict_New");
     _checkPyFunction(PyDict_New);
+    PyDict_SetItemString = (int (__cdecl *)(PyObject *p, const char *key, PyObject *val))GetProcAddress(py_module, "PyDict_SetItemString");
+    _checkPyFunction(PyDict_SetItemString);
     PyErr_BadArgument = (int (__cdecl *)(void))GetProcAddress(py_module, "PyErr_BadArgument");
     _checkPyFunction(PyErr_BadArgument);
     PyErr_Fetch = (void (__cdecl *)(PyObject **ptype, PyObject **pvalue, PyObject **ptraceback))GetProcAddress(py_module, "PyErr_Fetch");
@@ -107,6 +115,8 @@ int py_load(wchar_t * dllName){
     _checkPyFunction(PyEval_AcquireThread);
     PyEval_CallMethod = (PyObject * (__cdecl *)(PyObject *obj, const char *name, const char *format, ...))GetProcAddress(py_module, "PyEval_CallMethod");
     _checkPyFunction(PyEval_CallMethod);
+    PyEval_GetBuiltins = (PyObject* (__cdecl *)(void))GetProcAddress(py_module, "PyEval_GetBuiltins");
+    _checkPyFunction(PyEval_GetBuiltins);
     PyEval_InitThreads = (void (__cdecl *)(void))GetProcAddress(py_module, "PyEval_InitThreads");
     _checkPyFunction(PyEval_InitThreads);
     PyEval_ReInitThreads = (void (__cdecl *)(void))GetProcAddress(py_module, "PyEval_ReInitThreads");
@@ -151,6 +161,8 @@ int py_load(wchar_t * dllName){
     _checkPyFunction(PyRun_FileEx);
     PyRun_SimpleFileEx = (int (__cdecl *)(FILE *fp, const char *filename, int closeit))GetProcAddress(py_module, "PyRun_SimpleFileEx");
     _checkPyFunction(PyRun_SimpleFileEx);
+    PyRun_String = (PyObject* (__cdecl *)(const char *str, int start, PyObject *globals, PyObject *locals))GetProcAddress(py_module, "PyRun_String");
+    _checkPyFunction(PyRun_String);
     PySys_SetPath = (void (__cdecl *)(const wchar_t *path))GetProcAddress(py_module, "PySys_SetPath");
     _checkPyFunction(PySys_SetPath);
     PyThreadState_Get = (PyThreadState *(__cdecl *)(void))GetProcAddress(py_module, "PyThreadState_Get");
@@ -165,6 +177,8 @@ int py_load(wchar_t * dllName){
     _checkPyFunction(Py_EndInterpreter);
     Py_Finalize = (void (__cdecl *) (void))GetProcAddress(py_module, "Py_Finalize");
     _checkPyFunction(Py_Finalize);
+    Py_GetVersion = (const char* (__cdecl *)(void))GetProcAddress(py_module, "Py_GetVersion");
+    _checkPyFunction(Py_GetVersion);
     Py_InitializeEx = (void (__cdecl *) (int))GetProcAddress(py_module, "Py_InitializeEx");
     _checkPyFunction(Py_InitializeEx);
     Py_IsInitialized = (int (__cdecl *) (void))GetProcAddress(py_module, "Py_IsInitialized");
@@ -178,48 +192,57 @@ int py_load(wchar_t * dllName){
     /*ENDAUTOLISTMARK*/
     // spectial for different export name in .dll and _d.dll
     // for py below 3.4
+    const char * pyVerString = Py_GetVersion();
+    char pyVer = pyVerString[2];
     switch(pyVer) {
-    case 37:
-    case 36:
-    case 35:
-    case 34:
+    case '7':
+    case '6':
+    case '5':
+    case '4':
         PyGILState_Check = (int(__cdecl *)(void))GetProcAddress(py_module, "PyGILState_Check");
-    case 33:
-    case 32:
+    case '3':
+    case '2':
         PyUnicode_AsEncodedString = (PyObject * (__cdecl*)(PyObject *unicode, const char *encoding, const char *errors))GetProcAddress(py_module, "PyUnicode_AsEncodedString");
         _checkPyFunction(PyUnicode_AsEncodedString);
         PyUnicode_FromString = (PyObject *(__cdecl *) (const char *u))GetProcAddress(py_module, "PyUnicode_FromString");
         _checkPyFunction(PyUnicode_FromString);
         
-    case 31:
-    case 30:
+    case '1':
+    case '0':
         PyUnicode_Type = (PyTypeObject *)GetProcAddress(py_module, "PyUnicode_Type");
         if (NULL == PyUnicode_Type)
             PyUnicode_Type = (PyTypeObject *)GetProcAddress(py_module, "_PyUnicode_Type");
         _checkPyFunction(PyUnicode_Type);
+        PyUnicode_AsUTF8 = (const char * (__cdecl*)(PyObject *unicode))GetProcAddress(py_module, "PyUnicode_AsUTF8");
         if (NULL == PyUnicode_AsUTF8)
             PyUnicode_AsUTF8 = dirtyPyUnicode_AsUTF8;
+        _checkPyFunction(PyUnicode_AsUTF8);
+        PyUnicode_AsEncodedString = (PyObject * (__cdecl*)(PyObject *unicode, const char *encoding, const char *errors))GetProcAddress(py_module, "PyUnicode_AsEncodedString");
         if (NULL == PyUnicode_AsEncodedString)
             PyUnicode_AsEncodedString = (PyObject * (__cdecl*)(PyObject *unicode, const char *encoding, const char *errors))GetProcAddress(py_module, "PyUnicodeUCS2_AsEncodedString");
         if (NULL == PyUnicode_AsEncodedString) 
             PyUnicode_AsEncodedString = (PyObject * (__cdecl*)(PyObject *unicode, const char *encoding, const char *errors))GetProcAddress(py_module, "PyUnicodeUCS4_AsEncodedString");
         _checkPyFunction(PyUnicode_AsEncodedString);
+        PyUnicode_FromString = (PyObject *(__cdecl *) (const char *u))GetProcAddress(py_module, "PyUnicode_FromString");
         if (NULL == PyUnicode_FromString)
             PyUnicode_FromString = (PyObject *(__cdecl *) (const char *u))GetProcAddress(py_module, "PyUnicodeUCS2_FromString");
         if (NULL == PyUnicode_FromString)
             PyUnicode_FromString = (PyObject * (__cdecl*) (const char *u))GetProcAddress(py_module, "PyUnicodeUCS4_FromString");
         _checkPyFunction(PyUnicode_FromString);
-
-    }
-    
-    PyModule_Create2 = (PyObject * (__cdecl*)(struct PyModuleDef*, int))GetProcAddress(py_module, "PyModule_Create2");
-    if (NULL == PyModule_Create2) {
-        PyModule_Create2 = (PyObject * (__cdecl*)(struct PyModuleDef*, int))GetProcAddress(py_module, "PyModule_Create2TraceRefs");
+        PyModule_Create2 = (PyObject * (__cdecl*)(struct PyModuleDef*, int))GetProcAddress(py_module, "PyModule_Create2");
+        if (NULL == PyModule_Create2) {
+            PyModule_Create2 = (PyObject * (__cdecl*)(struct PyModuleDef*, int))GetProcAddress(py_module, "PyModule_Create2TraceRefs");
+        }
         _checkPyFunction(PyModule_Create2);
+        py_moduleLoaded = true;
+        return 0;
+    default:
+        loge("pyLoad", "unsupported py ver:\"%c\"", pyVer);
+        loge("pyLoad", "unsupported py ver:\"%s\"", pyVerString);
+        return -1;
     }
-    py_moduleLoaded = true;
     
-    return 0;
+    return 404; // never executed
 }
 /*
 * 卸载python3x.dll
@@ -231,6 +254,7 @@ bool py_unload() {
         logx("unloadModule", LOGGER_WARNING, "calling py_unload with module not load!");
         return false;
     };
+    PyUnicode_AsUTF8 = NULL;
     BOOL unloaded = FreeLibrary(py_module);
     if (!unloaded) {
         showLeLn("unloadModule");
@@ -249,8 +273,7 @@ PyMODINIT_FUNC PyInit_cqapi(void); // 声明函数，用于PyImport_AppendInitta
         return ERR_PYAPI_FAIL;\
     }\
 }
-PyObject *pyoGlobal = NULL;
-PyObject *pyoGlobalDict = NULL;
+
 /*
 * 初始化python， 新建（子）解释器
 * @return 返回初始化结果枚举：
@@ -300,14 +323,15 @@ void py_end() {
             Py_EndInterpreter(pyMainThreadState);
         }
 
+        PyDict_Clear(pyoGlobalDict);
         logd("pyEnd", "finalize done");
     }
 }
 void py_finalize() {
+    ENSURE_GIL;
     Py_Finalize();
 }
 
-bool _sysprops = false;
 /*
 * 加载蛋疼（Egg Pain）文件
 * @return 返回初始化结果枚举：
@@ -318,12 +342,11 @@ int py_initEp() {
     ENSURE_GIL;
     PyObject *pyoSys = pyoSys = PyImport_ImportModule("sys"); _checkPyObj(pyoSys);
     PyObject *pyoSys_path = PyObject_GetAttrString(pyoSys, "path"); _checkPyObj(pyoSys_path);
-
-    
-    pyoGlobal = PyImport_AddModule("__main__"); _checkPyObj(pyoGlobal);
-    pyoGlobalDict = PyModule_GetDict(pyoGlobal); _checkPyObj(pyoGlobalDict);
-    
     logd("ri", "%s", PyUnicode_AsUTF8(PyObject_Repr(pyoSys_path)));
+
+    pyoGlobal = PyImport_AddModule("__entrypoint__"); _checkPyObj(pyoGlobal);
+    pyoGlobalDict = PyModule_GetDict(pyoGlobal); _checkPyObj(pyoGlobal);
+    PyDict_SetItemString(pyoGlobalDict, "__builtins__", PyEval_GetBuiltins());
     
     // open file
     logd("openEntrypoint", "load entrypoint file from %s", appPath);
@@ -347,20 +370,23 @@ int py_initEp() {
     //logd("openEntrypoint","fd addr %d",epFd);
     //logd("openEntrypoint","d addr %d",pyo__main___d);
     //logd("openEntrypoint","d addr %d",PyRun_FileEx);
+    free(epPath);
     
 
     // run entrypoint
     //PyImport_ImportModule("cqapi"); // let user import it is also fine
     py_botObj = PyRun_FileEx(epFd, "__entrypoint__.py", Py_file_input, pyoGlobalDict, pyoGlobalDict, 1);
     //PyRun_SimpleFileEx(epFd, "__entrypoint__.py", 1);
-    free(epPath);
+    //
     if (NULL == py_botObj) {
         loge("runEntryPoint", TEXT_LOADENTRYPOINT_FAIL);
         catchPyExc();
         RELEASE_GIL;
         return ERR_EP_FAIL;
     }
-
+    
+    logd("ri2", "%s", PyUnicode_AsUTF8(PyObject_Repr(py_botObj)));
+    logd("ri2", "%s", PyUnicode_AsUTF8(PyObject_Repr(pyoGlobalDict)));
     py_botObj = PyDict_GetItemString(pyoGlobalDict, "__bot__");
     if (NULL == py_botObj) {
         logx("runEntryPoint", LOGGER_WARNING, TEXT_NOBOTGLOBALVAR);
@@ -371,12 +397,6 @@ int py_initEp() {
     RELEASE_GIL;
     return 0;
 }
-inline PyObject* callDelMethod(PyObject * o) {
-    if (o->ob_type)
-        if (o->ob_type->tp_del)
-            o->ob_type->tp_del(py_botObj);
-    return NULL;
-}
 /*
 *  卸载入口点
 */
@@ -384,7 +404,10 @@ void py_endEp() {
     if (py_entrypointLoaded) {
         py_entrypointLoaded = false;
         ENSURE_GIL;
-        py_botObj = callDelMethod(py_botObj);
+        //PyDict_Clear(pyoGlobalDict);
+        PyDict_DelItemString(pyoGlobalDict, "__bot__");
+        Py_CLEAR(py_botObj);
+        //PyDict_SetItemString(pyoGlobalDict, "__builtins__", PyEval_GetBuiltins());
         RELEASE_GIL;
     }
 }

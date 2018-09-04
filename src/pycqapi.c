@@ -159,7 +159,7 @@ PyMODINIT_FUNC PyInit_cqapi(void) {
 
     PyModule_AddStringConstant(module, "appdir", (const char *)appPath);// 程序数据目录
     PyModule_AddStringConstant(module, "nickname", (const char *)CQ_getLoginNick(ac));// 昵称
-    //PyModule_AddObject(module, "selfqq", PyLong_FromLongLong(CQ_getLoginQQ(ac)));
+    PyModule_AddObject(module, "selfqq", PyLong_FromLongLong(CQ_getLoginQQ(ac)));
     RELEASE_GIL;
     return module;
 }

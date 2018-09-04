@@ -324,6 +324,14 @@ do {\
         (*(((PyObject*)(_py_decref_tmp))->ob_type)->tp_dealloc)((PyObject *)(_py_decref_tmp));\
     };\
 } while (0);
+#define Py_CLEAR(op)                            \
+    do {                                        \
+        PyObject *_py_tmp = (PyObject *)(op);   \
+        if (_py_tmp != NULL) {                  \
+            (op) = NULL;                        \
+            Py_DECREF(_py_tmp);                 \
+        }                                       \
+} while (0)
 #define Py_RETURN_NONE Py_INCREF(Py_None); return *Py_None
 #define PyObject_HEAD_INIT(type)        \
     { _PyObject_EXTRA_INIT              \
@@ -387,6 +395,12 @@ PyThreadState* (*Py_NewInterpreter)(void);
 void(*Py_EndInterpreter)(PyThreadState *tstate);
 int (*PyRun_SimpleFileEx)(FILE *fp, const char *filename, int closeit);
 void (*PySys_SetPath)(const wchar_t *path);
+int (*PyDict_DelItemString)(PyObject *p, const char *key);
+void (*PyDict_Clear)(PyObject *p);
+PyObject* (*PyRun_String)(const char *str, int start, PyObject *globals, PyObject *locals);
+PyObject* (*PyEval_GetBuiltins)(void);
+int (*PyDict_SetItemString)(PyObject *p, const char *key, PyObject *val);
+const char* (*Py_GetVersion)(void);
 /*ENDMAKR*/
 // py below 3.4 dont support
 
@@ -406,7 +420,7 @@ PyObject * (*PyModule_Create2)(struct PyModuleDef*, int apiver);
 // this api version is not same as python, see pydir/include/modsupport.hL132
 #define PyModule_Create(x) PyModule_Create2(x, 1013)
 
-#define FUCKGIL logd("fuckGIL", "gil is %d", PyGILState_Check());
+#define FUCKGIL if (NULL!=PyGILState_Check) {logd("fuckGIL", "gil is %d", PyGILState_Check());}
 #define ENSURE_GIL PyGILState_STATE gstate = PyGILState_Ensure(); FUCKGIL
 #define RELEASE_GIL PyGILState_Release(gstate); FUCKGIL
 #endif // _PY_STRUCT_HEADER
