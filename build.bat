@@ -15,6 +15,7 @@ set LDARGS= -m32
 
 python autolist.py %SRCDIR%\py.c %SRCDIR%\pys.h || echo "autogenlist failed" && goto end
 python fuckgb.py %SRCDIR%\texts.h || echo "fuck GB failed" && goto end
+python mkjson.py %BUILDDIR%\%PACKAGE_NAME%.json Debug || echo "makeJson failed" && goto end
 
 cd %SRCDIR%
 for %%f in (*.c) do (
@@ -26,8 +27,10 @@ for %%f in (*.c) do (
 )
 cd %ROOTDIR%
 
-%CC% %PROPLIBDIR%\CQP.lib %BUILDDIR%\*.o -lcomdlg32.lib %LDARGS% -shared -o %BUILDDIR%\%OUTPUT_NAME% || goto end
+%CC% %PROPLIBDIR%\CQP.lib %BUILDDIR%\*.o -lcomdlg32.lib -lUser32.lib %LDARGS% -shared -o %BUILDDIR%\%OUTPUT_NAME% || goto end
 
-copy %BUILDDIR%\cn.dixyes.pyc.dll %ROOTDIR%\..\CQP\app\cn.dixyes.pyc.dll /y
+echo build done(Debug target)
 
 :end
+
+pause

@@ -328,7 +328,7 @@ void py_end() {
     }
 }
 void py_finalize() {
-    ENSURE_GIL;
+    PyGILState_Ensure();
     Py_Finalize();
 }
 
@@ -338,7 +338,7 @@ void py_finalize() {
 *         ERR_PYAPI_FAIL Python API失败
 */
 int py_initEp() {
-    int retCode = 0;
+    //int retCode = 0;
     ENSURE_GIL;
     //PyObject *pyoSys = pyoSys = PyImport_ImportModule("sys"); _checkPyObj(pyoSys);
     //PyObject *pyoSys_path = PyObject_GetAttrString(pyoSys, "path"); _checkPyObj(pyoSys_path);
