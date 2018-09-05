@@ -55,6 +55,10 @@ def cqapi(module):
     LOGGER_ERROR = 7 # 错误 红色
     LOGGER_FATAL = 8 # 致命错误 深红
     
+    selfqq = 10000 # 机器人q号，整型常量
+    appdir = "" # CQ的appDirectionary，字符串常量
+    nickname = "" # 昵称 - 字符串常量 （此api将会使用getter和setter替代）
+    
     def logger(msgObj:Object, type=cqapi.LOGGER_INFO, tag="pyLogger"):
         return None
     def sendpm(toQQ:int, msg:unicode):
@@ -89,7 +93,7 @@ def cqapi(module):
 使用helper构建简单机器人：
 
 ```Python3
-from helper import DummyBot, cqapi 
+from helper import DummyBot, cqapi, CQCode ,MsgFrom
 myBot = DummyBot()
 myBot.name="复读机测试"
 
@@ -109,12 +113,18 @@ def grpMsgProc():
     if event.fromQQ == badGuyQQID:
         cqapi.groupkick(event.fromGroup, badGuyQQID)
     if random.random() >0.9:
-        cqapi.sendgm(event.fromGroup,"恭喜[CQ:at,qq=%d]喜提禁言1分钟" % event.fromQQ)
+        cqapi.sendgm(event.fromGroup,"恭喜%s喜提禁言1分钟" % CQCode.at(event.fromQQ))
         cqapi.groupban(event.fromGroup, event.fromQQ ,1)
     return cqapi.EVENT_IGNORE
 
 __bot__ = myBot
 ```
+
+### 关于helper
+
+helper.py是一个简单的助手模块，其中有许多助手函数如CQCode.at(qq:int)可以参照其源码使用
+
+由于更新独立于c部分且较快，先不写文档了 ~（其实就是懒~
 
 ## dll开发文档
 
@@ -150,11 +160,14 @@ USE_PYD | "USE_PYD=L"$(DebugablePythonDir)"" | <-复制粘贴
 ## 问题
 ### 已知问题
 
-- ---重载dll时Py_Finalize玄学崩溃--- 功能已移除，只能加载一次dll（由于Py_FinalizeEx[BUG](https://docs.python.org/3/c-api/init.html#c.Py_FinalizeEx)，py解释器在python3x.dll下只能finalize一次）
+- ~重载dll时Py_Finalize玄学崩溃~ （使用python3x.dll的Release构建中）重载功能已移除，只能加载一次dll/脚本（由于Py_FinalizeEx的 [BUG](https://docs.python.org/3/c-api/init.html#c.Py_FinalizeEx)，py解释器在python3x.dll下只能finalize一次）
 
 ### 反馈与求助
 
 直接在issue提出问题，若为bug，提供详细环境
+
 ## 授权
+
+本软件包含部分python3.7头文件的源代码
 
 本软件由MIT许可证授权： [LICENSE](https://github.com/dixyes/pyCompactCQ/blob/master/LICENSE)

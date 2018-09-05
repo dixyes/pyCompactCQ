@@ -10,6 +10,7 @@
 #include "util.h"
 #include "py.h"
 
+#ifdef _DEBUG
 CQEVENT(int32_t, __menuReloadScript, 0)() {
     logi("reloadEntrypoint", TEXT_REQUIRERELOAD);
     py_finalize();
@@ -17,6 +18,7 @@ CQEVENT(int32_t, __menuReloadScript, 0)() {
     py_initEp();
     return 0;
 }
+#endif // _DEBUG
 CQEVENT(int32_t, __menuLoadModule, 0)() {
     logi("loadSelectedModule", TEXT_RELOADDLL);
     if (py_msmLoaded) {
@@ -25,7 +27,7 @@ CQEVENT(int32_t, __menuLoadModule, 0)() {
         py_finalize();
         py_msmLoaded = false;
 #else
-        logx("loadSelectedModule", LOGGER_WARNING, "nope,you can't REload dll");
+        //logx("loadSelectedModule", LOGGER_WARNING, "nope,you can't REload dll");
         MessageBoxW(NULL,LTEXT_NORELOADDLL,LTEXT_NORELOADDLLTITLE,MB_ICONERROR|MB_OK);
         return -1;
 #endif
@@ -36,8 +38,8 @@ CQEVENT(int32_t, __menuLoadModule, 0)() {
     OPENFILENAMEW ofn;
     memset(&ofn, 0, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
-    ofn.lpstrFilter = L"python3x.dll\0python3*.dll\0\0";
-    ofn.lpstrFile = L"%ProgramFiles%\\Python37-32";
+    ofn.lpstrFilter = L"Python Debug DLL\0python3*_d.dll\0Python DLL\0python3*.dll\0\0";
+    ofn.lpstrFile = L"%ProgramFiles%\\Python37-32\\python37_d.dll";
     ofn.nMaxFile = MAX_PATH;
     ofn.lpstrTitle = LTEXT_CHOOSEPYTHON;
     ofn.Flags = OFN_NONETWORKBUTTON | OFN_FILEMUSTEXIST;
@@ -53,6 +55,6 @@ CQEVENT(int32_t, __menuLoadModule, 0)() {
 CQEVENT(int32_t, __menuShowLicense, 0)() {
     //logi("showLicense",);
     MessageBoxW(NULL, LTEXT_PSF, LTEXT_PSFTITLE, MB_OK);
-    MessageBoxW(NULL, LTEXT_MITSELF, LTEXT_PSFTITLE, MB_OK);
+    MessageBoxW(NULL, LTEXT_MITSELF, LTEXT_SELFTITLE, MB_OK);
     return 0;
 }

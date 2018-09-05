@@ -402,7 +402,7 @@ PyObject* (*PyEval_GetBuiltins)(void);
 int (*PyDict_SetItemString)(PyObject *p, const char *key, PyObject *val);
 const char* (*Py_GetVersion)(void);
 /*ENDMAKR*/
-// py below 3.4 dont support
+// py below 3.4 dont support, debug only
 
 int(*PyGILState_Check)(void);
 
@@ -416,8 +416,10 @@ PyTypeObject * PyUnicode_Type;
 PyObject *(*PyUnicode_FromString) (const char *u);
 PyObject* (*PyUnicode_AsEncodedString)(PyObject *unicode, const char *encoding, const char *errors);
 // no forward for this
+
 PyObject * (*PyModule_Create2)(struct PyModuleDef*, int apiver);
 // this api version is not same as python, see pydir/include/modsupport.hL132
+
 #define PyModule_Create(x) PyModule_Create2(x, 1013)
 
 #define FUCKGIL if (NULL!=PyGILState_Check) {logd("fuckGIL", "gil is %d", PyGILState_Check());}

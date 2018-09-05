@@ -104,6 +104,10 @@ src = {
     ],
     "menu":[
         {
+            "name":"选择加载DLL(仅未成功加载DLL时可用)",
+            "function":"_menuLoadModule"
+        },
+        {
             "name":"开放源代码许可",
             "function":"_menuShowLicense"
         }
@@ -229,7 +233,7 @@ srcDbg = {
 }
 
 if __name__ == "__main__":
-    print("fucking", sys.argv)
+    print("building json file %s for %s build" % (sys.argv[1],sys.argv[2]) )
     toParse = srcDbg
     if len(sys.argv) > 2:
         if "release" == sys.argv[2].lower():

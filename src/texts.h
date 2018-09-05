@@ -8,7 +8,6 @@
 // TEXT_LOADENTRYPOINT "加载入口点文件 "%s""
 // TEXT_LOADENTRYPOINT_FAIL "加载入口点文件失败"
 // TEXT_NOBOTGLOBALVAR "入口点未设置__bot__全局变量"
-// LTEXT_CHOOSEPYTHON "选择要加载的Python DLL（32位，3.2-3.7）"
 // TEXT_CHOSENPYTHON "选择了%ls"
 // TEXT_REQUIRERELOAD "重载已请求"
 // TEXT_RELOADDLL "开始roll"
@@ -17,6 +16,9 @@
 // TEXT_PYINTNOTLOAD "回调被调用，但py解释其还未加载，可能是加载解释器还未完成或者失败"
 // TEXT_BOTNOTLOAD "回调被调用，但__bot__全局变量不存在，可能是入口点有错误"
 
+#define LTEXT_CHOOSEPYTHON L"\u9009\u62e9\u8981\u52a0\u8f7d\u7684Python DLL\uff0832\u4f4d\uff0cver3.2-3.7\uff09"
+#define LTEXT_NORELOADDLL L"DLL\u5df2\u52a0\u8f7d\uff0c\u6b64\u7248\u672cpyCompact\u65e0\u6cd5\u91cd\u65b0\u52a0\u8f7dPython DLL"
+#define LTEXT_NORELOADDLLTITLE L"\u4e0d\u5e26\u8fd9\u6837\u73a9\u7684"
 #define LTEXT_PSF L"\u672c\u8f6f\u4ef6\u90e8\u5206\u5305\u542bPython-3.7.0\u7684\u5934\u6587\u4ef6\u6e90\u7801\uff0c\u6388\u6743\u5982\u4e0b\n\
 \n\
 Copyright © 2001-2018 Python Software Foundation; All Rights Reserved\n\
@@ -64,19 +66,17 @@ third party.\n\
 8. By copying, installing or otherwise using Python 3.7.0, Licensee agrees\n\
 to be bound by the terms and conditions of this License Agreement."
 #define LTEXT_PSFTITLE L"PSF\u8bb8\u53ef\u8bc1"
+#define LTEXT_SELFTITLE L"About pyCompact for CoolQ"
 #define LTEXT_MITSELF L"pyCompact for CoolQ - yet another CoolQ python3 plugin\n\
 pyCompact for CoolQ - \u4e00\u4e2a\uff08\u8fa3\u9e21\uff09\u9177Q Python3\u63d2\u4ef6\n\
 copyright 2017-2018 dixyes <me@dixy.es>\n\
 \u672c\u8f6f\u4ef6\u91c7\u7528\u004d\u0049\u0054\u5f00\u6e90\u8bb8\u53ef\u8bc1\u6388\u6743\u3002"
-#define LTEXT_NORELOADDLL L""
-#define LTEXT_NORELOADDLLTITLE L""
 
 // generated definations here:
 // MERK
 #define TEXT_LOADENTRYPOINT "\xbc\xd3\xd4\xd8\xc8\xeb\xbf\xda\xb5\xe3\xce\xc4\xbc\xfe \"%s\""
 #define TEXT_LOADENTRYPOINT_FAIL "\xbc\xd3\xd4\xd8\xc8\xeb\xbf\xda\xb5\xe3\xce\xc4\xbc\xfe\xca\xa7\xb0\xdc"
 #define TEXT_NOBOTGLOBALVAR "\xc8\xeb\xbf\xda\xb5\xe3\xce\xb4\xc9\xe8\xd6\xc3__bot__\xc8\xab\xbe\xd6\xb1\xe4\xc1\xbf"
-#define LTEXT_CHOOSEPYTHON L"\xd1\xa1\xd4\xf1\xd2\xaa\xbc\xd3\xd4\xd8\xb5\xc4Python DLL\xa3\xa832\xce\xbb\xa3\xac3.2-3.7\xa3\xa9"
 #define TEXT_CHOSENPYTHON "\xd1\xa1\xd4\xf1\xc1\xcb%ls"
 #define TEXT_REQUIRERELOAD "\xd6\xd8\xd4\xd8\xd2\xd1\xc7\xeb\xc7\xf3"
 #define TEXT_RELOADDLL "\xbf\xaa\xca\xbcroll"

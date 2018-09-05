@@ -200,13 +200,13 @@ int py_load(wchar_t * dllName){
     case '5':
     case '4':
         PyGILState_Check = (int(__cdecl *)(void))GetProcAddress(py_module, "PyGILState_Check");
+        _checkPyFunction(PyGILState_Check); // only for GIL debug
     case '3':
     case '2':
         PyUnicode_AsEncodedString = (PyObject * (__cdecl*)(PyObject *unicode, const char *encoding, const char *errors))GetProcAddress(py_module, "PyUnicode_AsEncodedString");
         _checkPyFunction(PyUnicode_AsEncodedString);
         PyUnicode_FromString = (PyObject *(__cdecl *) (const char *u))GetProcAddress(py_module, "PyUnicode_FromString");
         _checkPyFunction(PyUnicode_FromString);
-        
     case '1':
     case '0':
         PyUnicode_Type = (PyTypeObject *)GetProcAddress(py_module, "PyUnicode_Type");
@@ -345,8 +345,10 @@ int py_initEp() {
     logd("ri", "%s", PyUnicode_AsUTF8(PyObject_Repr(pyoSys_path)));
 
     pyoGlobal = PyImport_AddModule("__entrypoint__"); _checkPyObj(pyoGlobal);
+    //pyoGlobal = PyImport_AddModule("__main__"); _checkPyObj(pyoGlobal);
     pyoGlobalDict = PyModule_GetDict(pyoGlobal); _checkPyObj(pyoGlobal);
     PyDict_SetItemString(pyoGlobalDict, "__builtins__", PyEval_GetBuiltins());
+    PyDict_SetItemString(pyoGlobalDict, "__bmaksa__", PyUnicode_FromString("fuck"));
     
     // open file
     logd("openEntrypoint", "load entrypoint file from %s", appPath);
@@ -371,7 +373,6 @@ int py_initEp() {
     //logd("openEntrypoint","d addr %d",pyo__main___d);
     //logd("openEntrypoint","d addr %d",PyRun_FileEx);
     free(epPath);
-    
 
     // run entrypoint
     //PyImport_ImportModule("cqapi"); // let user import it is also fine
@@ -384,12 +385,14 @@ int py_initEp() {
         RELEASE_GIL;
         return ERR_EP_FAIL;
     }
+    return 0;
     
-    logd("ri2", "%s", PyUnicode_AsUTF8(PyObject_Repr(py_botObj)));
     logd("ri2", "%s", PyUnicode_AsUTF8(PyObject_Repr(pyoGlobalDict)));
+    //logd("ri2", "%s", PyUnicode_AsUTF8(PyObject_Repr(pyoGlobalDict)));
     py_botObj = PyDict_GetItemString(pyoGlobalDict, "__bot__");
     if (NULL == py_botObj) {
         logx("runEntryPoint", LOGGER_WARNING, TEXT_NOBOTGLOBALVAR);
+        catchPyExc();
         RELEASE_GIL;
         return 0;
     }
