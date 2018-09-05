@@ -340,15 +340,14 @@ void py_finalize() {
 int py_initEp() {
     int retCode = 0;
     ENSURE_GIL;
-    PyObject *pyoSys = pyoSys = PyImport_ImportModule("sys"); _checkPyObj(pyoSys);
-    PyObject *pyoSys_path = PyObject_GetAttrString(pyoSys, "path"); _checkPyObj(pyoSys_path);
-    logd("ri", "%s", PyUnicode_AsUTF8(PyObject_Repr(pyoSys_path)));
+    //PyObject *pyoSys = pyoSys = PyImport_ImportModule("sys"); _checkPyObj(pyoSys);
+    //PyObject *pyoSys_path = PyObject_GetAttrString(pyoSys, "path"); _checkPyObj(pyoSys_path);
+    //logd("ri", "%s", PyUnicode_AsUTF8(PyObject_Repr(pyoSys_path)));
 
-    pyoGlobal = PyImport_AddModule("__entrypoint__"); _checkPyObj(pyoGlobal);
-    //pyoGlobal = PyImport_AddModule("__main__"); _checkPyObj(pyoGlobal);
+    //pyoGlobal = PyImport_AddModule("__entrypoint__"); _checkPyObj(pyoGlobal);
+    pyoGlobal = PyImport_AddModule("__main__"); _checkPyObj(pyoGlobal);
     pyoGlobalDict = PyModule_GetDict(pyoGlobal); _checkPyObj(pyoGlobal);
     PyDict_SetItemString(pyoGlobalDict, "__builtins__", PyEval_GetBuiltins());
-    PyDict_SetItemString(pyoGlobalDict, "__bmaksa__", PyUnicode_FromString("fuck"));
     
     // open file
     logd("openEntrypoint", "load entrypoint file from %s", appPath);
@@ -378,16 +377,13 @@ int py_initEp() {
     //PyImport_ImportModule("cqapi"); // let user import it is also fine
     py_botObj = PyRun_FileEx(epFd, "__entrypoint__.py", Py_file_input, pyoGlobalDict, pyoGlobalDict, 1);
     //PyRun_SimpleFileEx(epFd, "__entrypoint__.py", 1);
-    //
     if (NULL == py_botObj) {
         loge("runEntryPoint", TEXT_LOADENTRYPOINT_FAIL);
         catchPyExc();
         RELEASE_GIL;
         return ERR_EP_FAIL;
     }
-    return 0;
     
-    logd("ri2", "%s", PyUnicode_AsUTF8(PyObject_Repr(pyoGlobalDict)));
     //logd("ri2", "%s", PyUnicode_AsUTF8(PyObject_Repr(pyoGlobalDict)));
     py_botObj = PyDict_GetItemString(pyoGlobalDict, "__bot__");
     if (NULL == py_botObj) {
